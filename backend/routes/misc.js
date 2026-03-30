@@ -4,7 +4,9 @@ const { auth, adminOnly } = require('../middleware/auth');
 
 // ── CATEGORIES ──
 router.get('/categories', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM categories ORDER BY name');
+  // Ensure sort_order column exists (migration safe)
+  try { await db.query('ALTER TABLE categories ADD COLUMN sort_order INT DEFAULT 0'); } catch {}
+  const [rows] = await db.query('SELECT * FROM categories ORDER BY sort_order ASC, id ASC');
   res.json(rows);
 });
 
@@ -12,7 +14,8 @@ router.post('/categories', auth, adminOnly, async (req, res) => {
   try {
     const { name, image } = req.body;
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    await db.query('INSERT INTO categories (name, slug, image) VALUES (?,?,?)', [name, slug, image]);
+    const [[{ maxOrder }]] = await db.query('SELECT COALESCE(MAX(sort_order),0) as maxOrder FROM categories');
+    await db.query('INSERT INTO categories (name, slug, image, sort_order) VALUES (?,?,?,?)', [name, slug, image, maxOrder + 1]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -21,6 +24,18 @@ router.put('/categories/:id', auth, adminOnly, async (req, res) => {
   try {
     const { name, image } = req.body;
     await db.query('UPDATE categories SET name=?, image=? WHERE id=?', [name, image, req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Reorder — reçoit un tableau d'IDs dans le nouvel ordre
+router.put('/categories/reorder', auth, adminOnly, async (req, res) => {
+  try {
+    const { ids } = req.body; // [3, 1, 5, 2, ...]
+    if (!Array.isArray(ids)) return res.status(400).json({ error: 'ids requis' });
+    await Promise.all(ids.map((id, index) =>
+      db.query('UPDATE categories SET sort_order=? WHERE id=?', [index, id])
+    ));
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

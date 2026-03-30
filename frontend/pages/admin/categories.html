@@ -5,6 +5,79 @@
 <title>Catégories — Admin LUXE.MA</title>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/admin.css">
+<style>
+.cats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  cursor: grab;
+  transition: all 0.2s;
+  user-select: none;
+}
+.cat-row:active { cursor: grabbing; }
+.cat-row.dragging {
+  opacity: 0.4;
+  border-color: var(--gold);
+  transform: scale(0.98);
+}
+.cat-row.drag-over {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.15);
+}
+.drag-handle {
+  color: var(--text3);
+  font-size: 1.1rem;
+  cursor: grab;
+  padding: 0 0.2rem;
+  flex-shrink: 0;
+}
+.drag-handle:active { cursor: grabbing; }
+.cat-row-img {
+  width: 48px; height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.cat-row-info { flex: 1; min-width: 0; }
+.cat-row-name { color: var(--text); font-weight: 500; font-size: 0.95rem; }
+.cat-row-slug { color: var(--text3); font-size: 0.75rem; margin-top: 0.15rem; }
+.cat-row-order {
+  font-size: 0.7rem;
+  color: var(--text3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  padding: 0.15rem 0.5rem;
+  flex-shrink: 0;
+}
+.cat-row-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.save-order-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 0.8rem 1.2rem;
+  margin: 0 1rem 0.5rem;
+  gap: 1rem;
+}
+.save-order-bar.visible { display: flex; }
+.save-order-bar span { font-size: 0.85rem; color: var(--gold); }
+</style>
 </head>
 <body>
 <div class="admin-layout">
@@ -32,18 +105,25 @@
 
   <div class="admin-main">
     <div class="admin-topbar">
-      <h1>Catégories</h1>
+      <div>
+        <h1>Catégories</h1>
+        <p style="color:var(--text3);font-size:0.82rem;margin-top:0.2rem">Glissez-déposez pour changer l'ordre d'affichage</p>
+      </div>
       <button class="btn btn-gold" onclick="openCreate()">+ Nouvelle catégorie</button>
     </div>
     <div class="admin-content">
-      <div class="card">
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr><th>Image</th><th>Nom</th><th>Slug</th><th>Actions</th></tr></thead>
-            <tbody id="cat-body">
-              <tr><td colspan="4" style="text-align:center;padding:3rem"><div class="spinner" style="margin:0 auto"></div></td></tr>
-            </tbody>
-          </table>
+      <div class="card" style="overflow:visible">
+        <!-- Barre de sauvegarde -->
+        <div class="save-order-bar" id="save-order-bar">
+          <span>⚡ Ordre modifié — sauvegardez pour appliquer sur le site</span>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-dark btn-sm" onclick="cancelReorder()">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="saveOrder()">Sauvegarder l'ordre</button>
+          </div>
+        </div>
+        <!-- Liste drag & drop -->
+        <div class="cats-list" id="cats-list">
+          <div class="loading-center"><div class="spinner"></div></div>
         </div>
       </div>
     </div>
@@ -66,6 +146,9 @@
       <div class="form-group">
         <label class="form-label">URL image</label>
         <input class="form-control" id="cat-image" placeholder="https://...">
+        <div id="img-preview" style="margin-top:0.8rem;display:none">
+          <img id="img-preview-el" src="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border)">
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -81,37 +164,137 @@
 if (!Auth.isLoggedIn() || !Auth.isAdmin()) window.location.href = '/login';
 document.getElementById('sidebar-user-name').textContent = Auth.get()?.name;
 
+let cats = [];
+let originalOrder = [];
+let orderChanged = false;
+let dragSrc = null;
+
+// ── Image preview ──
+document.getElementById('cat-image').addEventListener('input', function() {
+  const preview = document.getElementById('img-preview');
+  const img = document.getElementById('img-preview-el');
+  if (this.value) { img.src = this.value; preview.style.display = 'block'; }
+  else { preview.style.display = 'none'; }
+});
+
+// ── Load ──
 async function loadCats() {
-  const cats = await apiCall('GET', '/categories');
-  document.getElementById('cat-body').innerHTML = cats.length ? cats.map(c => `
-    <tr>
-      <td><img src="${c.image||'https://via.placeholder.com/42'}" onerror="this.src='https://via.placeholder.com/42'"></td>
-      <td style="color:var(--text)">${c.name}</td>
-      <td style="font-size:0.78rem;color:var(--text3)">${c.slug}</td>
-      <td style="display:flex;gap:0.5rem;padding:0.9rem 1rem">
-        <button class="btn btn-dark btn-sm" onclick="openEdit(${JSON.stringify(c).replace(/"/g,'&quot;')})">Modifier</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteCat(${c.id})">Supprimer</button>
-      </td>
-    </tr>
-  `).join('') : '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3)">Aucune catégorie</td></tr>';
+  cats = await apiCall('GET', '/categories');
+  originalOrder = cats.map(c => c.id);
+  orderChanged = false;
+  document.getElementById('save-order-bar').classList.remove('visible');
+  renderList();
 }
 
+function renderList() {
+  const list = document.getElementById('cats-list');
+  if (!cats.length) {
+    list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text3)">Aucune catégorie — créez-en une !</div>';
+    return;
+  }
+  list.innerHTML = cats.map((c, i) => `
+    <div class="cat-row" draggable="true" data-id="${c.id}" data-index="${i}"
+         ondragstart="onDragStart(event,${i})"
+         ondragover="onDragOver(event,${i})"
+         ondragleave="onDragLeave(event)"
+         ondrop="onDrop(event,${i})"
+         ondragend="onDragEnd(event)">
+      <span class="drag-handle" title="Glisser pour réordonner">⠿</span>
+      <img class="cat-row-img"
+           src="${c.image || 'https://via.placeholder.com/48'}"
+           onerror="this.src='https://via.placeholder.com/48'"
+           alt="${c.name}">
+      <div class="cat-row-info">
+        <div class="cat-row-name">${c.name}</div>
+        <div class="cat-row-slug">${c.slug}</div>
+      </div>
+      <span class="cat-row-order">#${i + 1}</span>
+      <div class="cat-row-actions">
+        <button class="btn btn-dark btn-sm" onclick="openEdit(${i})">Modifier</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCat(${c.id})">Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Drag & Drop ──
+function onDragStart(e, index) {
+  dragSrc = index;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e, index) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (index !== dragSrc) e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onDrop(e, index) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (index === dragSrc) return;
+  // Reorder array
+  const moved = cats.splice(dragSrc, 1)[0];
+  cats.splice(index, 0, moved);
+  dragSrc = index;
+  // Check if order changed
+  const currentOrder = cats.map(c => c.id);
+  orderChanged = JSON.stringify(currentOrder) !== JSON.stringify(originalOrder);
+  if (orderChanged) document.getElementById('save-order-bar').classList.add('visible');
+  renderList();
+}
+function onDragEnd(e) {
+  document.querySelectorAll('.cat-row').forEach(r => {
+    r.classList.remove('dragging', 'drag-over');
+  });
+}
+
+// ── Save order ──
+async function saveOrder() {
+  try {
+    const ids = cats.map(c => c.id);
+    await apiCall('PUT', '/categories/reorder', { ids });
+    originalOrder = [...ids];
+    orderChanged = false;
+    document.getElementById('save-order-bar').classList.remove('visible');
+    Toast.success('Ordre sauvegardé — la page d\'accueil est mise à jour !');
+    renderList();
+  } catch(e) { Toast.error(e.message); }
+}
+function cancelReorder() {
+  // Restore original order
+  const original = originalOrder.map(id => cats.find(c => c.id === id));
+  cats = original;
+  orderChanged = false;
+  document.getElementById('save-order-bar').classList.remove('visible');
+  renderList();
+}
+
+// ── CRUD ──
 function openCreate() {
   document.getElementById('modal-cat-title').textContent = 'Nouvelle catégorie';
   document.getElementById('cat-id').value = '';
   document.getElementById('cat-name').value = '';
   document.getElementById('cat-image').value = '';
+  document.getElementById('img-preview').style.display = 'none';
   openModal('cat-modal');
 }
-
-function openEdit(c) {
+function openEdit(index) {
+  const c = cats[index];
   document.getElementById('modal-cat-title').textContent = 'Modifier la catégorie';
   document.getElementById('cat-id').value = c.id;
   document.getElementById('cat-name').value = c.name;
   document.getElementById('cat-image').value = c.image || '';
+  if (c.image) {
+    document.getElementById('img-preview-el').src = c.image;
+    document.getElementById('img-preview').style.display = 'block';
+  } else {
+    document.getElementById('img-preview').style.display = 'none';
+  }
   openModal('cat-modal');
 }
-
 async function saveCat() {
   const id = document.getElementById('cat-id').value;
   const name = document.getElementById('cat-name').value.trim();
@@ -125,11 +308,13 @@ async function saveCat() {
     loadCats();
   } catch(e) { Toast.error(e.message); }
 }
-
 async function deleteCat(id) {
   if (!confirm('Supprimer cette catégorie ?')) return;
-  try { await apiCall('DELETE', `/categories/${id}`); Toast.success('Supprimée'); loadCats(); }
-  catch(e) { Toast.error(e.message); }
+  try {
+    await apiCall('DELETE', `/categories/${id}`);
+    Toast.success('Supprimée');
+    loadCats();
+  } catch(e) { Toast.error(e.message); }
 }
 
 loadCats();
