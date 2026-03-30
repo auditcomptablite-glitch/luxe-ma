@@ -1,13 +1,17 @@
-<!-- NAV TEMPLATE — include via JS or copy into each page -->
+<!-- NAV TEMPLATE — include via JS ou copier dans chaque page -->
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+
+    <!-- Desktop links -->
     <div class="nav-links">
       <a href="/">Accueil</a>
       <a href="/shop">Boutique</a>
       <a href="/track">Suivre commande</a>
     </div>
+
     <div class="nav-actions">
+      <!-- Panier -->
       <a href="/cart" style="position:relative;display:inline-flex;color:inherit;">
         <button class="nav-icon-btn" title="Panier">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -22,7 +26,7 @@
 
       <!-- Logged in -->
       <div id="nav-user" style="display:none;align-items:center;gap:0.8rem;">
-        <a href="/my-orders" class="btn btn-dark btn-sm">Mes commandes</a>
+        <a href="/my-orders" class="btn btn-dark btn-sm" id="nav-my-orders-btn" style="display:none">Mes commandes</a>
         <a href="/admin" class="btn btn-gold btn-sm nav-admin-link" style="display:none">Admin</a>
         <div style="position:relative;">
           <button class="nav-icon-btn" onclick="document.getElementById('user-menu').classList.toggle('open-menu')" style="display:flex;align-items:center;gap:0.4rem;color:var(--text)">
@@ -37,10 +41,56 @@
           </div>
         </div>
       </div>
-      <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').style.display=document.querySelector('.nav-links').style.display==='flex'?'none':'flex'">☰</button>
+
+      <!-- Hamburger button -->
+      <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </div>
 </nav>
+
+<!-- Mobile menu overlay -->
+<div class="nav-mobile-menu" id="nav-mobile-menu">
+  <div class="mobile-menu-logo">LUXE<span>.</span>MA</div>
+  <a href="/" onclick="closeMobileMenu()">Accueil</a>
+  <a href="/shop" onclick="closeMobileMenu()">Boutique</a>
+  <a href="/track" onclick="closeMobileMenu()">Suivre commande</a>
+  <a href="/cart" onclick="closeMobileMenu()">Panier</a>
+  <a href="/profile" onclick="closeMobileMenu()" id="mobile-profile-link" style="display:none">Mon profil</a>
+  <a href="/my-orders" onclick="closeMobileMenu()" id="mobile-orders-link" style="display:none">Mes commandes</a>
+  <a href="/admin" onclick="closeMobileMenu()" id="mobile-admin-link" style="display:none;color:var(--gold)">Dashboard Admin</a>
+  <a href="/login" onclick="closeMobileMenu()" id="mobile-login-link">Connexion</a>
+  <button onclick="logout()" id="mobile-logout-btn" style="display:none;color:var(--red)">Déconnexion</button>
+</div>
+
 <style>
   .open-menu { display:block!important; }
 </style>
+
+<script>
+function toggleMobileMenu() {
+  const menu = document.getElementById('nav-mobile-menu');
+  const btn = document.getElementById('nav-hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+  document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+}
+function closeMobileMenu() {
+  const menu = document.getElementById('nav-mobile-menu');
+  const btn = document.getElementById('nav-hamburger');
+  if (!menu) return;
+  menu.classList.remove('open');
+  btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('nav-mobile-menu');
+  const btn = document.getElementById('nav-hamburger');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+    closeMobileMenu();
+  }
+});
+</script>

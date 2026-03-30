@@ -105,9 +105,16 @@ function initNav() {
   const user = Auth.get();
   const navUser = document.getElementById('nav-user');
   const navLogin = document.getElementById('nav-login');
-  if (!navUser && !navLogin) return;
+
+  // Mobile menu elements
+  const mobileLoginLink  = document.getElementById('mobile-login-link');
+  const mobileLogoutBtn  = document.getElementById('mobile-logout-btn');
+  const mobileProfileLink = document.getElementById('mobile-profile-link');
+  const mobileOrdersLink = document.getElementById('mobile-orders-link');
+  const mobileAdminLink  = document.getElementById('mobile-admin-link');
 
   if (user) {
+    // Desktop
     if (navLogin) navLogin.style.display = 'none';
     if (navUser) {
       navUser.style.display = 'flex';
@@ -118,9 +125,22 @@ function initNav() {
         if (adminLink) adminLink.style.display = 'inline-flex';
       }
     }
+    // Mobile
+    if (mobileLoginLink)   mobileLoginLink.style.display = 'none';
+    if (mobileLogoutBtn)   mobileLogoutBtn.style.display = 'block';
+    if (mobileProfileLink) mobileProfileLink.style.display = 'block';
+    if (mobileOrdersLink)  mobileOrdersLink.style.display = 'block';
+    if (mobileAdminLink && user.role === 'admin') mobileAdminLink.style.display = 'block';
   } else {
+    // Desktop
     if (navUser) navUser.style.display = 'none';
     if (navLogin) navLogin.style.display = 'flex';
+    // Mobile
+    if (mobileLoginLink)   mobileLoginLink.style.display = 'block';
+    if (mobileLogoutBtn)   mobileLogoutBtn.style.display = 'none';
+    if (mobileProfileLink) mobileProfileLink.style.display = 'none';
+    if (mobileOrdersLink)  mobileOrdersLink.style.display = 'none';
+    if (mobileAdminLink)   mobileAdminLink.style.display = 'none';
   }
 }
 
