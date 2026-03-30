@@ -20,22 +20,23 @@ router.post('/categories', auth, adminOnly, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.put('/categories/:id', auth, adminOnly, async (req, res) => {
-  try {
-    const { name, image } = req.body;
-    await db.query('UPDATE categories SET name=?, image=? WHERE id=?', [name, image, req.params.id]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 // Reorder — reçoit un tableau d'IDs dans le nouvel ordre
+// IMPORTANT: doit être avant /:id sinon Express capte "reorder" comme un id
 router.put('/categories/reorder', auth, adminOnly, async (req, res) => {
   try {
-    const { ids } = req.body; // [3, 1, 5, 2, ...]
+    const { ids } = req.body;
     if (!Array.isArray(ids)) return res.status(400).json({ error: 'ids requis' });
     await Promise.all(ids.map((id, index) =>
       db.query('UPDATE categories SET sort_order=? WHERE id=?', [index, id])
     ));
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.put('/categories/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const { name, image } = req.body;
+    await db.query('UPDATE categories SET name=?, image=? WHERE id=?', [name, image, req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
