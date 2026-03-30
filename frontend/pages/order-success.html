@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Commande confirmée — LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.success-box{max-width:560px;margin:8rem auto;text-align:center;padding:0 1rem;}
+.success-icon{font-size:4rem;margin-bottom:1.5rem;animation:pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);}
+@keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+.order-number-box{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:var(--radius);padding:1rem 2rem;display:inline-block;margin:1.5rem 0;}
+.order-number-label{font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.3rem;}
+.order-number{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.05em;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+    <div class="nav-actions">
+      <div id="nav-login" style="display:flex;"><a href="/login" class="btn btn-outline btn-sm">Connexion</a></div>
+      <div id="nav-user" style="display:none;align-items:center;gap:0.8rem;"><span class="nav-user-name" style="font-size:0.8rem;color:var(--text2)"></span></div>
+    </div>
+  </div>
+</nav>
+
+<div class="success-box">
+  <div class="success-icon">✅</div>
+  <h1>Commande confirmée !</h1>
+  <p style="color:var(--text2);margin-top:0.8rem;line-height:1.7">
+    Merci pour votre commande. Vous serez contacté(e) pour confirmer les détails de livraison.
+  </p>
+  <div class="order-number-box">
+    <div class="order-number-label">Numéro de commande</div>
+    <div class="order-number" id="order-number">—</div>
+  </div>
+  <div id="order-total" style="margin-bottom:2rem;font-size:1.1rem;color:var(--text2)"></div>
+  <div style="display:flex;flex-direction:column;gap:0.8rem;align-items:center">
+    <a href="/track" class="btn btn-outline btn-lg">Suivre ma commande</a>
+    <a href="/shop" class="btn btn-dark btn-lg">Continuer mes achats</a>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+document.getElementById('order-number').textContent = params.get('number') || '—';
+const total = params.get('total');
+if (total) document.getElementById('order-total').textContent = `Total payé à la livraison : ${parseFloat(total).toFixed(2)} MAD`;
+</script>
+</body>
+</html>

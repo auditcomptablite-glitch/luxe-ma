@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mes Commandes — LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.order-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;}
+.order-card-head{padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:0.8rem;}
+.order-card-body{padding:1.2rem 1.5rem;}
+.order-item-line{display:flex;justify-content:space-between;font-size:0.85rem;padding:0.3rem 0;color:var(--text2);}
+.order-total-line{display:flex;justify-content:space-between;font-size:1rem;font-weight:500;padding-top:0.8rem;border-top:1px solid var(--border);margin-top:0.5rem;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+    <div class="nav-links"><a href="/">Accueil</a><a href="/shop">Boutique</a></div>
+    <div class="nav-actions">
+      <a href="/cart" style="position:relative;display:inline-flex;color:inherit;">
+        <button class="nav-icon-btn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span class="cart-badge" style="display:none">0</span></button>
+      </a>
+      <div id="nav-user" style="display:flex;align-items:center;gap:0.8rem;">
+        <a href="/profile" class="btn btn-dark btn-sm">Mon profil</a>
+        <a href="/admin" class="btn btn-gold btn-sm nav-admin-link" style="display:none">Admin</a>
+        <button class="btn btn-dark btn-sm" onclick="logout()">Déconnexion</button>
+      </div>
+      <div id="nav-login" style="display:none;"><a href="/login" class="btn btn-outline btn-sm">Connexion</a></div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h2>Mes Commandes</h2>
+  </div>
+</div>
+
+<div class="container section" style="padding-top:2rem;max-width:780px">
+  <div id="orders-list">
+    <div class="loading-center"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href = '/login?redirect=/my-orders';
+
+async function load() {
+  try {
+    const orders = await apiCall('GET', '/orders/my');
+    const el = document.getElementById('orders-list');
+    if (!orders.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><h3>Aucune commande</h3><p>Vous n'avez pas encore passé de commande</p><a href="/shop" class="btn btn-gold btn-lg">Explorer la boutique</a></div>`;
+      return;
+    }
+    el.innerHTML = orders.map(o => `
+      <div class="order-card">
+        <div class="order-card-head">
+          <div>
+            <div style="font-weight:500">${o.order_number}</div>
+            <div style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem">${formatDate(o.created_at)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            ${statusBadge(o.status)}
+            <a href="/track?number=${o.order_number}" class="btn btn-dark btn-sm">Suivre</a>
+          </div>
+        </div>
+        <div class="order-card-body">
+          ${o.items.map(i => `
+            <div class="order-item-line">
+              <span>${i.product_name} × ${i.quantity}</span>
+              <span>${parseFloat(i.subtotal).toFixed(2)} MAD</span>
+            </div>
+          `).join('')}
+          ${o.discount > 0 ? `<div class="order-item-line"><span style="color:var(--green)">Réduction (coupon)</span><span style="color:var(--green)">-${parseFloat(o.discount).toFixed(2)} MAD</span></div>` : ''}
+          <div class="order-total-line">
+            <span>Total payé à la livraison</span>
+            <span style="color:var(--gold2)">${parseFloat(o.total).toFixed(2)} MAD</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) { Toast.error(e.message); }
+}
+
+load();
+</script>
+</body>
+</html>

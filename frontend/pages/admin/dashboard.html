@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — Admin LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <div class="admin-sidebar" id="admin-sidebar">
+    <div class="sidebar-logo">LUXE<span style="color:var(--gold)">.</span>MA <span class="sidebar-tag">Administration</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Vue d'ensemble</div>
+      <a href="/admin" class="sidebar-link active"><span class="icon">📊</span> Tableau de bord</a>
+      <div class="sidebar-section-label">Catalogue</div>
+      <a href="/admin/products" class="sidebar-link"><span class="icon">🛍️</span> Produits</a>
+      <a href="/admin/categories" class="sidebar-link"><span class="icon">🗂️</span> Catégories</a>
+      <div class="sidebar-section-label">Commerce</div>
+      <a href="/admin/orders" class="sidebar-link"><span class="icon">📦</span> Commandes</a>
+      <a href="/admin/coupons" class="sidebar-link"><span class="icon">🎟️</span> Coupons</a>
+      <div class="sidebar-section-label">Membres</div>
+      <a href="/admin/users" class="sidebar-link"><span class="icon">👥</span> Utilisateurs</a>
+      <div class="sidebar-section-label">Site</div>
+      <a href="/" target="_blank" class="sidebar-link"><span class="icon">🌐</span> Voir le site</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user-name"></div>
+      <button class="btn btn-dark btn-sm" style="width:100%" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1>Tableau de bord</h1>
+      <div style="font-size:0.8rem;color:var(--text3)" id="topbar-date"></div>
+    </div>
+    <div class="admin-content">
+
+      <!-- STATS -->
+      <div class="stat-grid" id="stat-grid">
+        <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+
+      <!-- BOTTOM GRID -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:0.5rem">
+        <!-- Recent orders -->
+        <div class="card" style="overflow:hidden">
+          <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <h3 style="font-family:var(--font-display)">Commandes récentes</h3>
+            <a href="/admin/orders" class="btn btn-dark btn-sm">Voir tout</a>
+          </div>
+          <div id="recent-orders"><div class="loading-center"><div class="spinner"></div></div></div>
+        </div>
+
+        <!-- Top products -->
+        <div class="card" style="overflow:hidden">
+          <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border)">
+            <h3 style="font-family:var(--font-display)">Top produits</h3>
+          </div>
+          <div id="top-products"><div class="loading-center"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+// Auth guard
+if (!Auth.isLoggedIn() || !Auth.isAdmin()) window.location.href = '/login';
+document.getElementById('sidebar-user-name').textContent = Auth.get()?.name || 'Admin';
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('fr-MA', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+async function loadDashboard() {
+  try {
+    const s = await apiCall('GET', '/admin/stats');
+
+    document.getElementById('stat-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-label">Total commandes</div><div class="stat-value">${s.orders}</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Chiffre d'affaires</div><div class="stat-value gold">${parseFloat(s.revenue||0).toLocaleString('fr-MA')} MAD</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">En attente</div><div class="stat-value">${s.pending}</div></div>
+      <div class="stat-card"><div class="stat-icon">🚚</div><div class="stat-label">Expédiées</div><div class="stat-value">${s.shipped}</div></div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Clients</div><div class="stat-value">${s.users}</div></div>
+      <div class="stat-card"><div class="stat-icon">🛍️</div><div class="stat-label">Produits actifs</div><div class="stat-value">${s.products}</div></div>
+    `;
+
+    document.getElementById('recent-orders').innerHTML = s.recentOrders.length ? `
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>N°</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+          <tbody>
+            ${s.recentOrders.map(o => `
+              <tr style="cursor:pointer" onclick="window.location='/admin/orders'">
+                <td style="color:var(--text);font-size:0.78rem">${o.order_number}</td>
+                <td style="color:var(--gold2)">${parseFloat(o.total).toFixed(2)} MAD</td>
+                <td>${statusBadge(o.status)}</td>
+                <td style="font-size:0.78rem">${formatDate(o.created_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : '<div class="empty-state" style="padding:2rem"><p>Aucune commande</p></div>';
+
+    document.getElementById('top-products').innerHTML = s.topProducts.length ? `
+      <div style="padding:0.5rem 0">
+        ${s.topProducts.map((p, i) => `
+          <div style="display:flex;align-items:center;gap:1rem;padding:0.8rem 1.5rem;border-bottom:1px solid var(--border)">
+            <span style="font-size:0.8rem;color:var(--text3);width:20px">#${i+1}</span>
+            <img src="${p.image||'https://via.placeholder.com/36'}" style="width:36px;height:36px;object-fit:cover;border-radius:var(--radius)" onerror="this.src='https://via.placeholder.com/36'">
+            <span style="flex:1;font-size:0.85rem">${p.name}</span>
+            <span style="font-size:0.82rem;color:var(--gold)">${p.sold} vendus</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '<div class="empty-state" style="padding:2rem"><p>Aucune donnée</p></div>';
+
+  } catch(e) { Toast.error('Erreur chargement: ' + e.message); }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

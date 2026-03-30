@@ -1,0 +1,46 @@
+<!-- NAV TEMPLATE — include via JS or copy into each page -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+    <div class="nav-links">
+      <a href="/">Accueil</a>
+      <a href="/shop">Boutique</a>
+      <a href="/track">Suivre commande</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/cart" style="position:relative;display:inline-flex;color:inherit;">
+        <button class="nav-icon-btn" title="Panier">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span class="cart-badge" style="display:none">0</span>
+        </button>
+      </a>
+
+      <!-- Logged out -->
+      <div id="nav-login" style="display:flex;align-items:center;gap:0.5rem;">
+        <a href="/login" class="btn btn-outline btn-sm">Connexion</a>
+      </div>
+
+      <!-- Logged in -->
+      <div id="nav-user" style="display:none;align-items:center;gap:0.8rem;">
+        <a href="/my-orders" class="btn btn-dark btn-sm">Mes commandes</a>
+        <a href="/admin" class="btn btn-gold btn-sm nav-admin-link" style="display:none">Admin</a>
+        <div style="position:relative;">
+          <button class="nav-icon-btn" onclick="document.getElementById('user-menu').classList.toggle('open-menu')" style="display:flex;align-items:center;gap:0.4rem;color:var(--text)">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <span class="nav-user-name" style="font-size:0.8rem"></span>
+          </button>
+          <div id="user-menu" style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);min-width:160px;overflow:hidden;z-index:200;">
+            <a href="/profile" style="display:block;padding:0.7rem 1rem;font-size:0.82rem;color:var(--text2);transition:all 0.2s" onmouseover="this.style.color='var(--text)';this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.color='var(--text2)';this.style.background='transparent'">Mon profil</a>
+            <a href="/my-orders" style="display:block;padding:0.7rem 1rem;font-size:0.82rem;color:var(--text2);transition:all 0.2s" onmouseover="this.style.color='var(--text)';this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.color='var(--text2)';this.style.background='transparent'">Mes commandes</a>
+            <div style="border-top:1px solid var(--border);margin:0.3rem 0"></div>
+            <button onclick="logout()" style="width:100%;text-align:left;display:block;padding:0.7rem 1rem;font-size:0.82rem;color:var(--red);background:none;border:none;cursor:pointer;font-family:var(--font-body)">Déconnexion</button>
+          </div>
+        </div>
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').style.display=document.querySelector('.nav-links').style.display==='flex'?'none':'flex'">☰</button>
+    </div>
+  </div>
+</nav>
+<style>
+  .open-menu { display:block!important; }
+</style>

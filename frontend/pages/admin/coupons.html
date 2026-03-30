@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coupons — Admin LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="sidebar-logo">LUXE<span style="color:var(--gold)">.</span>MA <span class="sidebar-tag">Administration</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Vue d'ensemble</div>
+      <a href="/admin" class="sidebar-link"><span class="icon">📊</span> Tableau de bord</a>
+      <div class="sidebar-section-label">Catalogue</div>
+      <a href="/admin/products" class="sidebar-link"><span class="icon">🛍️</span> Produits</a>
+      <a href="/admin/categories" class="sidebar-link"><span class="icon">🗂️</span> Catégories</a>
+      <div class="sidebar-section-label">Commerce</div>
+      <a href="/admin/orders" class="sidebar-link"><span class="icon">📦</span> Commandes</a>
+      <a href="/admin/coupons" class="sidebar-link active"><span class="icon">🎟️</span> Coupons</a>
+      <div class="sidebar-section-label">Membres</div>
+      <a href="/admin/users" class="sidebar-link"><span class="icon">👥</span> Utilisateurs</a>
+      <div class="sidebar-section-label">Site</div>
+      <a href="/" target="_blank" class="sidebar-link"><span class="icon">🌐</span> Voir le site</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user-name"></div>
+      <button class="btn btn-dark btn-sm" style="width:100%" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1>Codes promo</h1>
+      <button class="btn btn-gold" onclick="openCreate()">+ Nouveau coupon</button>
+    </div>
+    <div class="admin-content">
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Min. achat</th><th>Utilisations</th><th>Expiration</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="coupons-body">
+              <tr><td colspan="8" style="text-align:center;padding:3rem"><div class="spinner" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Coupon Modal -->
+<div class="modal-overlay" id="coupon-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span class="modal-title">Nouveau coupon</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Code promo *</label>
+        <input class="form-control" id="c-code" placeholder="Ex: SUMMER20" style="text-transform:uppercase">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Type de réduction</label>
+          <select class="form-control" id="c-type">
+            <option value="percent">Pourcentage (%)</option>
+            <option value="fixed">Montant fixe (MAD)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valeur *</label>
+          <input class="form-control" id="c-value" type="number" step="0.01" min="0" placeholder="10">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Montant minimum (MAD)</label>
+          <input class="form-control" id="c-min" type="number" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Utilisations max</label>
+          <input class="form-control" id="c-max-uses" type="number" min="1" placeholder="Illimité">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date d'expiration</label>
+        <input class="form-control" id="c-expires" type="date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-dark" onclick="closeModal('coupon-modal')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveCoupon()">Créer le coupon</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+if (!Auth.isLoggedIn() || !Auth.isAdmin()) window.location.href = '/login';
+document.getElementById('sidebar-user-name').textContent = Auth.get()?.name;
+
+async function loadCoupons() {
+  const coupons = await apiCall('GET', '/coupons');
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('coupons-body').innerHTML = coupons.length ? coupons.map(c => {
+    const expired = c.expires_at && c.expires_at.split('T')[0] < today;
+    const exhausted = c.max_uses && c.uses_count >= c.max_uses;
+    const active = c.is_active && !expired && !exhausted;
+    return `
+      <tr>
+        <td style="font-weight:600;color:var(--gold);letter-spacing:0.05em">${c.code}</td>
+        <td style="font-size:0.82rem">${c.type === 'percent' ? 'Pourcentage' : 'Montant fixe'}</td>
+        <td style="color:var(--gold2)">${c.type === 'percent' ? c.value + '%' : parseFloat(c.value).toFixed(2) + ' MAD'}</td>
+        <td style="font-size:0.82rem;color:var(--text3)">${parseFloat(c.min_amount).toFixed(2)} MAD</td>
+        <td style="font-size:0.82rem">${c.uses_count}${c.max_uses ? ' / ' + c.max_uses : ''}</td>
+        <td style="font-size:0.82rem;color:${expired?'var(--red)':'var(--text3)'}">${c.expires_at ? c.expires_at.split('T')[0] : '—'}</td>
+        <td>
+          <span class="badge ${active ? 'badge-delivered' : 'badge-cancelled'}">${active ? 'Actif' : expired ? 'Expiré' : exhausted ? 'Épuisé' : 'Inactif'}</span>
+        </td>
+        <td style="display:flex;gap:0.5rem;padding:0.9rem 1rem">
+          <button class="btn btn-dark btn-sm" onclick="toggleCoupon(${c.id}, ${c.is_active})">${c.is_active ? 'Désactiver' : 'Activer'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCoupon(${c.id})">✕</button>
+        </td>
+      </tr>
+    `;
+  }).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text3)">Aucun coupon</td></tr>';
+}
+
+function openCreate() {
+  document.getElementById('c-code').value = '';
+  document.getElementById('c-type').value = 'percent';
+  document.getElementById('c-value').value = '';
+  document.getElementById('c-min').value = '0';
+  document.getElementById('c-max-uses').value = '';
+  document.getElementById('c-expires').value = '';
+  openModal('coupon-modal');
+}
+
+async function saveCoupon() {
+  const code = document.getElementById('c-code').value.trim().toUpperCase();
+  const value = parseFloat(document.getElementById('c-value').value);
+  if (!code || !value) { Toast.error('Code et valeur requis'); return; }
+  try {
+    await apiCall('POST', '/coupons', {
+      code, type: document.getElementById('c-type').value,
+      value, min_amount: parseFloat(document.getElementById('c-min').value) || 0,
+      max_uses: parseInt(document.getElementById('c-max-uses').value) || null,
+      expires_at: document.getElementById('c-expires').value || null
+    });
+    Toast.success('Coupon créé !');
+    closeModal('coupon-modal');
+    loadCoupons();
+  } catch(e) { Toast.error(e.message); }
+}
+
+async function toggleCoupon(id, current) {
+  try { await apiCall('PUT', `/coupons/${id}`, { is_active: !current }); Toast.success('Coupon mis à jour'); loadCoupons(); }
+  catch(e) { Toast.error(e.message); }
+}
+
+async function deleteCoupon(id) {
+  if (!confirm('Supprimer ce coupon ?')) return;
+  try { await apiCall('DELETE', `/coupons/${id}`); Toast.success('Supprimé'); loadCoupons(); }
+  catch(e) { Toast.error(e.message); }
+}
+
+loadCoupons();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!-- Admin Sidebar — included via JS in each admin page -->
+<div class="admin-sidebar" id="admin-sidebar">
+  <div class="sidebar-logo">
+    LUXE<span>.</span>MA
+    <span class="sidebar-tag">Administration</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Vue d'ensemble</div>
+    <a href="/admin" class="sidebar-link" data-page="dashboard">
+      <span class="icon">📊</span> Tableau de bord
+    </a>
+
+    <div class="sidebar-section-label">Catalogue</div>
+    <a href="/admin/products" class="sidebar-link" data-page="products">
+      <span class="icon">🛍️</span> Produits
+    </a>
+    <a href="/admin/categories" class="sidebar-link" data-page="categories">
+      <span class="icon">🗂️</span> Catégories
+    </a>
+
+    <div class="sidebar-section-label">Commerce</div>
+    <a href="/admin/orders" class="sidebar-link" data-page="orders">
+      <span class="icon">📦</span> Commandes
+    </a>
+    <a href="/admin/coupons" class="sidebar-link" data-page="coupons">
+      <span class="icon">🎟️</span> Coupons
+    </a>
+
+    <div class="sidebar-section-label">Membres</div>
+    <a href="/admin/users" class="sidebar-link" data-page="users">
+      <span class="icon">👥</span> Utilisateurs
+    </a>
+
+    <div class="sidebar-section-label">Site</div>
+    <a href="/" target="_blank" class="sidebar-link">
+      <span class="icon">🌐</span> Voir le site
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebar-user-name">Admin</div>
+    <button class="btn btn-dark btn-sm" style="width:100%" onclick="logout()">Déconnexion</button>
+  </div>
+</div>

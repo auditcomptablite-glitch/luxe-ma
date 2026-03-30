@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Commandes — Admin LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="sidebar-logo">LUXE<span style="color:var(--gold)">.</span>MA <span class="sidebar-tag">Administration</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Vue d'ensemble</div>
+      <a href="/admin" class="sidebar-link"><span class="icon">📊</span> Tableau de bord</a>
+      <div class="sidebar-section-label">Catalogue</div>
+      <a href="/admin/products" class="sidebar-link"><span class="icon">🛍️</span> Produits</a>
+      <a href="/admin/categories" class="sidebar-link"><span class="icon">🗂️</span> Catégories</a>
+      <div class="sidebar-section-label">Commerce</div>
+      <a href="/admin/orders" class="sidebar-link active"><span class="icon">📦</span> Commandes</a>
+      <a href="/admin/coupons" class="sidebar-link"><span class="icon">🎟️</span> Coupons</a>
+      <div class="sidebar-section-label">Membres</div>
+      <a href="/admin/users" class="sidebar-link"><span class="icon">👥</span> Utilisateurs</a>
+      <div class="sidebar-section-label">Site</div>
+      <a href="/" target="_blank" class="sidebar-link"><span class="icon">🌐</span> Voir le site</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user-name"></div>
+      <button class="btn btn-dark btn-sm" style="width:100%" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1>Gestion des commandes</h1>
+      <div style="font-size:0.82rem;color:var(--text3)" id="order-count-label"></div>
+    </div>
+    <div class="admin-content">
+
+      <!-- Filters -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <select class="form-control" id="status-filter" onchange="loadOrders()" style="width:auto">
+            <option value="">Tous les statuts</option>
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmées</option>
+            <option value="processing">En préparation</option>
+            <option value="shipped">Expédiées</option>
+            <option value="delivered">Livrées</option>
+            <option value="cancelled">Annulées</option>
+          </select>
+        </div>
+        <div style="font-size:0.82rem;color:var(--text3)">Paiement : <strong style="color:var(--gold)">À la livraison</strong></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>N° Commande</th>
+                <th>Client</th>
+                <th>Ville</th>
+                <th>Articles</th>
+                <th>Total</th>
+                <th>Statut</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-body">
+              <tr><td colspan="8" style="text-align:center;padding:3rem"><div class="spinner" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination" style="padding:1rem"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-order-number">Commande</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-order-detail"></div>
+
+      <div style="border-top:1px solid var(--border);margin-top:1.5rem;padding-top:1.5rem">
+        <div style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:1rem">Mettre à jour le statut</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nouveau statut</label>
+            <select class="form-control" id="new-status">
+              <option value="pending">En attente</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="processing">En préparation</option>
+              <option value="shipped">Expédiée</option>
+              <option value="delivered">Livrée</option>
+              <option value="cancelled">Annulée</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de livraison</label>
+            <input class="form-control" id="delivery-date" type="date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note livreur</label>
+          <input class="form-control" id="delivery-notes" placeholder="Informations pour la livraison...">
+        </div>
+        <button class="btn btn-gold" onclick="updateStatus()">✓ Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+if (!Auth.isLoggedIn() || !Auth.isAdmin()) window.location.href = '/login';
+document.getElementById('sidebar-user-name').textContent = Auth.get()?.name;
+
+let currentOrderId = null;
+let currentPage = 1;
+
+async function loadOrders() {
+  const status = document.getElementById('status-filter').value;
+  const tbody = document.getElementById('orders-body');
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+
+  try {
+    const data = await apiCall('GET', `/orders?status=${status}&page=${currentPage}&limit=15`);
+    document.getElementById('order-count-label').textContent = `${data.total} commande(s)`;
+
+    if (!data.orders.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--text3)">Aucune commande trouvée</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.orders.map(o => `
+      <tr>
+        <td style="color:var(--text);font-weight:500;font-size:0.78rem">${o.order_number}</td>
+        <td>
+          <div style="font-size:0.85rem">${o.guest_name || 'Client #' + (o.user_id||'?')}</div>
+          <div style="font-size:0.75rem;color:var(--text3)">${o.guest_phone || ''}</div>
+        </td>
+        <td style="font-size:0.85rem">${o.shipping_city}</td>
+        <td style="font-size:0.82rem;color:var(--text3)">${o.items.length} article(s)</td>
+        <td style="color:var(--gold2);font-weight:500">${parseFloat(o.total).toFixed(2)} MAD</td>
+        <td>${statusBadge(o.status)}</td>
+        <td style="font-size:0.78rem;color:var(--text3)">${formatDate(o.created_at)}</td>
+        <td>
+          <button class="btn btn-dark btn-sm" onclick="openOrder(${JSON.stringify(o).replace(/"/g,'&quot;')})">
+            Détail
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    // Pagination
+    const pg = document.getElementById('pagination');
+    const pages = Math.ceil(data.total / 15);
+    pg.innerHTML = '';
+    for (let i = 1; i <= pages; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+      btn.textContent = i;
+      btn.onclick = () => { currentPage = i; loadOrders(); };
+      pg.appendChild(btn);
+    }
+  } catch(e) { Toast.error(e.message); }
+}
+
+function openOrder(order) {
+  currentOrderId = order.id;
+  document.getElementById('modal-order-number').textContent = order.order_number;
+  document.getElementById('new-status').value = order.status;
+  document.getElementById('delivery-date').value = order.delivery_date ? order.delivery_date.split('T')[0] : '';
+  document.getElementById('delivery-notes').value = order.delivery_notes || '';
+
+  document.getElementById('modal-order-detail').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;font-size:0.85rem">
+      <div><div style="color:var(--text3);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Client</div><div>${order.guest_name||'Compte client'}</div>${order.guest_phone?`<div style="color:var(--text3)">${order.guest_phone}</div>`:''}</div>
+      <div><div style="color:var(--text3);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Livraison</div><div>${order.shipping_address}</div><div>${order.shipping_city}</div></div>
+      <div><div style="color:var(--text3);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Paiement</div><div style="color:var(--gold)">💵 À la livraison</div></div>
+      <div><div style="color:var(--text3);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Date</div><div>${formatDate(order.created_at)}</div></div>
+    </div>
+
+    <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem">
+      ${order.items.map(i => `
+        <div style="display:flex;justify-content:space-between;padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem">
+          <span>${i.product_name} <span style="color:var(--text3)">× ${i.quantity}</span></span>
+          <span style="color:var(--gold2)">${parseFloat(i.subtotal).toFixed(2)} MAD</span>
+        </div>
+      `).join('')}
+      ${order.discount>0?`<div style="display:flex;justify-content:space-between;padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem"><span style="color:var(--green)">Coupon (${order.coupon_code})</span><span style="color:var(--green)">-${parseFloat(order.discount).toFixed(2)} MAD</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;padding:0.8rem 1rem;font-weight:500"><span>Total</span><span style="color:var(--gold2)">${parseFloat(order.total).toFixed(2)} MAD</span></div>
+    </div>
+
+    ${order.shipping_notes?`<div style="background:var(--bg3);border-radius:var(--radius);padding:0.8rem 1rem;font-size:0.82rem;color:var(--text2);margin-bottom:1rem">📝 ${order.shipping_notes}</div>`:''}
+  `;
+
+  openModal('order-modal');
+}
+
+async function updateStatus() {
+  const status = document.getElementById('new-status').value;
+  const delivery_date = document.getElementById('delivery-date').value;
+  const delivery_notes = document.getElementById('delivery-notes').value;
+  try {
+    await apiCall('PUT', `/orders/${currentOrderId}/status`, { status, delivery_date, delivery_notes });
+    Toast.success('Statut mis à jour');
+    closeModal('order-modal');
+    loadOrders();
+  } catch(e) { Toast.error(e.message); }
+}
+
+loadOrders();
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion — LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse 80% 60% at 30% 50%,rgba(201,168,76,0.05) 0%,transparent 70%);}
+.auth-card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2.5rem;}
+.auth-logo{text-align:center;margin-bottom:2rem;}
+.auth-title{font-family:var(--font-display);font-size:1.8rem;text-align:center;margin-bottom:0.4rem;}
+.auth-sub{text-align:center;color:var(--text2);font-size:0.85rem;margin-bottom:2rem;}
+.auth-sep{text-align:center;color:var(--text3);font-size:0.8rem;margin:1.2rem 0;position:relative;}
+.auth-sep::before,.auth-sep::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border2);}
+.auth-sep::before{left:0} .auth-sep::after{right:0}
+</style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><a href="/" class="nav-logo">LUXE<span style="color:var(--gold)">.</span>MA</a></div>
+    <h2 class="auth-title">Bon retour !</h2>
+    <p class="auth-sub">Connectez-vous pour accéder à votre compte</p>
+
+    <div id="error-msg" style="display:none;background:rgba(224,85,85,0.1);border:1px solid rgba(224,85,85,0.2);border-radius:var(--radius);padding:0.8rem 1rem;margin-bottom:1.2rem;font-size:0.85rem;color:var(--red)"></div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-control" id="email" type="email" placeholder="votre@email.com" autofocus>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mot de passe</label>
+      <input class="form-control" id="password" type="password" placeholder="••••••••">
+    </div>
+
+    <button class="btn btn-gold btn-lg" style="width:100%;margin-top:0.5rem" id="login-btn" onclick="doLogin()">
+      Se connecter
+    </button>
+
+    <div class="auth-sep">ou</div>
+    <a href="/register" class="btn btn-dark" style="width:100%">Créer un compte</a>
+
+    <p style="text-align:center;font-size:0.8rem;color:var(--text3);margin-top:1.5rem">
+      <a href="/" style="color:var(--text3)">← Retour à la boutique</a>
+    </p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+// Redirect if already logged in
+if (Auth.isLoggedIn()) window.location.href = Auth.isAdmin() ? '/admin' : '/';
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl = document.getElementById('error-msg');
+  const btn = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.style.display='block'; errEl.textContent='Veuillez remplir tous les champs.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Connexion...';
+  try {
+    const data = await apiCall('POST', '/auth/login', { email, password });
+    Auth.set(data.user, data.token);
+    const redirect = new URLSearchParams(window.location.search).get('redirect') || (data.user.role === 'admin' ? '/admin' : '/');
+    window.location.href = redirect;
+  } catch(e) {
+    errEl.style.display = 'block'; errEl.textContent = e.message;
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+}
+</script>
+</body>
+</html>

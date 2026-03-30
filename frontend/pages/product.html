@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Produit — LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.product-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; padding: 4rem 0; align-items: start; }
+.product-img-main { width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius); border:1px solid var(--border); }
+.product-meta { padding-top: 1rem; }
+.product-cat-tag { font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:0.8rem; }
+.product-title { font-family:var(--font-display); font-size:clamp(1.8rem,3vw,2.8rem); font-weight:400; line-height:1.2; margin-bottom:1rem; }
+.product-price { font-size:2rem; color:var(--gold2); font-weight:500; margin-bottom:1.5rem; }
+.product-desc { color:var(--text2); line-height:1.8; margin-bottom:2rem; }
+.qty-control { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; }
+.qty-btn { width:36px;height:36px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition); }
+.qty-btn:hover{border-color:var(--gold);color:var(--gold);}
+.qty-val { font-size:1.1rem; font-weight:500; min-width:2rem; text-align:center; }
+.stock-info { font-size:0.8rem; color:var(--text3); margin-bottom:2rem; }
+.stock-ok { color:var(--green); }
+.stock-low { color:var(--gold); }
+.stock-out { color:var(--red); }
+@media(max-width:800px){.product-detail{grid-template-columns:1fr;gap:2rem;}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+    <div class="nav-links"><a href="/">Accueil</a><a href="/shop">Boutique</a><a href="/track">Suivre commande</a></div>
+    <div class="nav-actions">
+      <a href="/cart" style="position:relative;display:inline-flex;color:inherit;">
+        <button class="nav-icon-btn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span class="cart-badge" style="display:none">0</span></button>
+      </a>
+      <div id="nav-login" style="display:flex;"><a href="/login" class="btn btn-outline btn-sm">Connexion</a></div>
+      <div id="nav-user" style="display:none;align-items:center;gap:0.8rem;">
+        <a href="/admin" class="btn btn-gold btn-sm nav-admin-link" style="display:none">Admin</a>
+        <span class="nav-user-name" style="font-size:0.8rem;color:var(--text2)"></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div id="product-detail">
+    <div class="loading-center" style="min-height:60vh"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+let product = null;
+let qty = 1;
+
+async function loadProduct() {
+  const slug = window.location.pathname.split('/').pop();
+  try {
+    product = await apiCall('GET', `/products/${slug}`);
+    render();
+  } catch {
+    document.getElementById('product-detail').innerHTML = `
+      <div class="empty-state" style="min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column">
+        <div class="empty-state-icon">😕</div>
+        <h3>Produit introuvable</h3>
+        <a href="/shop" class="btn btn-gold" style="margin-top:1rem">Retour à la boutique</a>
+      </div>`;
+  }
+}
+
+function render() {
+  const stockClass = product.stock > 10 ? 'stock-ok' : product.stock > 0 ? 'stock-low' : 'stock-out';
+  const stockText = product.stock > 10 ? `✓ En stock (${product.stock} disponibles)` : product.stock > 0 ? `⚠ Stock limité (${product.stock} restants)` : '✕ Rupture de stock';
+
+  document.title = `${product.name} — LUXE.MA`;
+  document.getElementById('product-detail').innerHTML = `
+    <div class="product-detail">
+      <div>
+        <img class="product-img-main" src="${product.image||'https://via.placeholder.com/600'}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/600'">
+      </div>
+      <div class="product-meta">
+        <div class="breadcrumb" style="justify-content:flex-start;margin-bottom:1rem">
+          <a href="/">Accueil</a><span>/</span><a href="/shop">Boutique</a><span>/</span><span>${product.name}</span>
+        </div>
+        <div class="product-cat-tag">${product.category_name||'Accessoire'}</div>
+        <h1 class="product-title">${product.name}</h1>
+        <div class="product-price">${parseFloat(product.price).toFixed(2)} MAD</div>
+        <p class="product-desc">${product.description||''}</p>
+        <div class="stock-info ${stockClass}">${stockText}</div>
+
+        ${product.stock > 0 ? `
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <span class="qty-val" id="qty-display">1</span>
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+          <span style="font-size:0.82rem;color:var(--text3)">quantité</span>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <button class="btn btn-gold btn-lg" onclick="addProduct()" style="flex:1">
+            🛒 Ajouter au panier
+          </button>
+          <a href="/checkout" class="btn btn-outline btn-lg" onclick="addProduct()" style="flex:1">
+            Commander maintenant
+          </a>
+        </div>` : `<button class="btn btn-dark btn-lg" disabled>Rupture de stock</button>`}
+
+        <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:0.6rem">
+          <div style="font-size:0.82rem;color:var(--text3)">🚚 Livraison dans tout le Maroc</div>
+          <div style="font-size:0.82rem;color:var(--text3)">💳 Paiement à la livraison</div>
+          <div style="font-size:0.82rem;color:var(--text3)">↩️ Retours sous 7 jours</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function changeQty(delta) {
+  qty = Math.max(1, Math.min(product.stock, qty + delta));
+  document.getElementById('qty-display').textContent = qty;
+}
+
+function addProduct() {
+  Cart.add(product, qty);
+}
+
+loadProduct();
+</script>
+</body>
+</html>

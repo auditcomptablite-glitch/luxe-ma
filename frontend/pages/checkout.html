@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Commande — LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.checkout-layout{display:grid;grid-template-columns:1fr 380px;gap:2.5rem;align-items:start;}
+.step-title{font-family:var(--font-display);font-size:1.3rem;margin-bottom:1.5rem;padding-bottom:0.8rem;border-bottom:1px solid var(--border);}
+.order-item{display:flex;align-items:center;gap:1rem;padding:0.8rem 0;border-bottom:1px solid var(--border);}
+.order-item img{width:54px;height:54px;object-fit:cover;border-radius:var(--radius);}
+.order-item-name{flex:1;font-size:0.9rem;}
+.order-item-qty{font-size:0.8rem;color:var(--text3);}
+.order-item-price{font-weight:500;color:var(--gold2);}
+.coupon-box{display:flex;gap:0.6rem;margin-bottom:1.2rem;}
+.coupon-box input{flex:1;}
+.coupon-result{font-size:0.85rem;padding:0.6rem 0.8rem;border-radius:var(--radius);margin-bottom:1rem;}
+.coupon-ok{background:rgba(92,184,92,0.1);color:var(--green);border:1px solid rgba(92,184,92,0.2);}
+.coupon-err{background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.2);}
+.summary-row{display:flex;justify-content:space-between;margin-bottom:0.8rem;font-size:0.9rem;color:var(--text2);}
+.summary-total{display:flex;justify-content:space-between;font-size:1.3rem;font-weight:500;padding-top:1rem;border-top:1px solid var(--border);margin:1rem 0 1.5rem;}
+.cod-banner{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.25);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.85rem;color:var(--text2);}
+@media(max-width:900px){.checkout-layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+    <div class="nav-links"><a href="/">Accueil</a><a href="/shop">Boutique</a></div>
+    <div class="nav-actions">
+      <a href="/cart" style="position:relative;display:inline-flex;color:inherit;">
+        <button class="nav-icon-btn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span class="cart-badge" style="display:none">0</span></button>
+      </a>
+      <div id="nav-login" style="display:flex;"><a href="/login" class="btn btn-outline btn-sm">Connexion</a></div>
+      <div id="nav-user" style="display:none;align-items:center;gap:0.8rem;">
+        <a href="/admin" class="btn btn-gold btn-sm nav-admin-link" style="display:none">Admin</a>
+        <span class="nav-user-name" style="font-size:0.8rem;color:var(--text2)"></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Accueil</a><span>/</span><a href="/cart">Panier</a><span>/</span><span>Commande</span></div>
+    <h2>Finaliser la commande</h2>
+  </div>
+</div>
+
+<div class="container section" style="padding-top:2rem">
+  <div class="checkout-layout">
+    <!-- LEFT: FORM -->
+    <div>
+      <!-- Contact -->
+      <div class="card" style="padding:2rem;margin-bottom:1.5rem">
+        <div class="step-title">📋 Informations de livraison</div>
+        <div id="login-hint" style="display:none;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);border-radius:var(--radius);padding:0.8rem 1rem;margin-bottom:1.2rem;font-size:0.84rem;color:var(--text2)">
+          <a href="/login" style="color:var(--gold)">Connectez-vous</a> pour remplir automatiquement vos informations
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom complet *</label>
+            <input class="form-control" id="f-name" placeholder="Votre nom" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone *</label>
+            <input class="form-control" id="f-phone" placeholder="+212 6 XX XX XX XX" required>
+          </div>
+        </div>
+        <div class="form-group" id="guest-email-wrap">
+          <label class="form-label">Email (optionnel)</label>
+          <input class="form-control" id="f-email" placeholder="votre@email.com" type="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adresse de livraison *</label>
+          <input class="form-control" id="f-address" placeholder="Numéro, rue, quartier..." required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Ville *</label>
+            <input class="form-control" id="f-city" placeholder="Casablanca, Rabat..." required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes (optionnel)</label>
+            <input class="form-control" id="f-notes" placeholder="Précisions pour le livreur...">
+          </div>
+        </div>
+      </div>
+
+      <!-- COD -->
+      <div class="card" style="padding:2rem;margin-bottom:1.5rem">
+        <div class="step-title">💳 Mode de paiement</div>
+        <div class="cod-banner">
+          <strong style="color:var(--gold)">💵 Paiement à la livraison</strong><br>
+          Payez en espèces directement au livreur lors de la réception de votre commande. Simple et sécurisé.
+        </div>
+      </div>
+
+      <!-- Coupon -->
+      <div class="card" style="padding:2rem">
+        <div class="step-title">🎟️ Code promo</div>
+        <div class="coupon-box">
+          <input class="form-control" id="coupon-input" placeholder="BIENVENUE10, SOLDES20..." style="text-transform:uppercase">
+          <button class="btn btn-outline" onclick="applyCoupon()">Appliquer</button>
+        </div>
+        <div id="coupon-result" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SUMMARY -->
+    <div>
+      <div class="card" style="padding:1.5rem;position:sticky;top:90px">
+        <h3 style="font-family:var(--font-display);margin-bottom:1.5rem">Votre commande</h3>
+        <div id="order-items"></div>
+        <div style="margin-top:1rem">
+          <div class="summary-row"><span>Sous-total</span><span id="s-subtotal">0.00 MAD</span></div>
+          <div class="summary-row" id="discount-row" style="display:none"><span style="color:var(--green)">Réduction</span><span id="s-discount" style="color:var(--green)">-0.00 MAD</span></div>
+          <div class="summary-row"><span>Livraison</span><span style="color:var(--green)">Gratuite</span></div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span id="s-total">0.00 MAD</span>
+          </div>
+          <button class="btn btn-gold btn-lg" style="width:100%" onclick="placeOrder()" id="order-btn">
+            ✓ Confirmer la commande
+          </button>
+          <p style="text-align:center;font-size:0.75rem;color:var(--text3);margin-top:0.8rem">
+            🔒 Vos données sont sécurisées
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+let appliedCoupon = null;
+let couponDiscount = 0;
+
+function renderItems() {
+  const items = Cart.get();
+  if (!items.length) { window.location.href = '/cart'; return; }
+  const subtotal = Cart.subtotal();
+  document.getElementById('order-items').innerHTML = items.map(i => `
+    <div class="order-item">
+      <img src="${i.image||'https://via.placeholder.com/54'}" alt="${i.name}" onerror="this.src='https://via.placeholder.com/54'">
+      <div class="order-item-name">${i.name}<div class="order-item-qty">× ${i.quantity}</div></div>
+      <div class="order-item-price">${(i.price*i.quantity).toFixed(2)} MAD</div>
+    </div>
+  `).join('');
+  updateSummary();
+}
+
+function updateSummary() {
+  const subtotal = Cart.subtotal();
+  document.getElementById('s-subtotal').textContent = subtotal.toFixed(2) + ' MAD';
+  if (couponDiscount > 0) {
+    document.getElementById('discount-row').style.display = 'flex';
+    document.getElementById('s-discount').textContent = '-' + couponDiscount.toFixed(2) + ' MAD';
+  } else {
+    document.getElementById('discount-row').style.display = 'none';
+  }
+  document.getElementById('s-total').textContent = (subtotal - couponDiscount).toFixed(2) + ' MAD';
+}
+
+async function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+  if (!code) return;
+  const res = document.getElementById('coupon-result');
+  res.style.display = 'block';
+  res.className = 'coupon-result';
+  res.textContent = 'Vérification...';
+  try {
+    const data = await apiCall('POST', '/orders/validate-coupon', { code, amount: Cart.subtotal() });
+    appliedCoupon = { code, id: data.coupon.id };
+    couponDiscount = data.discount;
+    res.className = 'coupon-result coupon-ok';
+    res.textContent = `✓ Coupon appliqué ! Réduction: -${data.discount.toFixed(2)} MAD`;
+    updateSummary();
+  } catch(e) {
+    appliedCoupon = null; couponDiscount = 0;
+    res.className = 'coupon-result coupon-err';
+    res.textContent = '✕ ' + e.message;
+    updateSummary();
+  }
+}
+
+async function placeOrder() {
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const address = document.getElementById('f-address').value.trim();
+  const city = document.getElementById('f-city').value.trim();
+  if (!name || !phone || !address || !city) { Toast.error('Veuillez remplir tous les champs obligatoires'); return; }
+
+  const btn = document.getElementById('order-btn');
+  btn.disabled = true; btn.textContent = 'Traitement...';
+
+  const user = Auth.get();
+  const shipping = {
+    name: !user ? name : undefined,
+    email: !user ? document.getElementById('f-email').value.trim() : undefined,
+    phone, address, city,
+    notes: document.getElementById('f-notes').value.trim()
+  };
+
+  try {
+    const data = await apiCall('POST', '/orders', {
+      items: Cart.get().map(i => ({ product_id: i.product_id, quantity: i.quantity })),
+      shipping,
+      coupon_code: appliedCoupon?.code || null
+    });
+    Cart.clear();
+    window.location.href = `/order-success?number=${data.order_number}&total=${data.total}`;
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '✓ Confirmer la commande';
+    Toast.error(e.message);
+  }
+}
+
+// Pre-fill if logged in
+const user = Auth.get();
+if (user) {
+  document.getElementById('guest-email-wrap').style.display = 'none';
+  apiCall('GET', '/auth/me').then(u => {
+    document.getElementById('f-name').value = u.name || '';
+    document.getElementById('f-phone').value = u.phone || '';
+    document.getElementById('f-address').value = u.address || '';
+    document.getElementById('f-city').value = u.city || '';
+  }).catch(()=>{});
+} else {
+  document.getElementById('login-hint').style.display = 'block';
+}
+
+document.getElementById('coupon-input').addEventListener('keydown', e => { if(e.key==='Enter') applyCoupon(); });
+renderItems();
+</script>
+</body>
+</html>

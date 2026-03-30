@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catégories — Admin LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="sidebar-logo">LUXE<span style="color:var(--gold)">.</span>MA <span class="sidebar-tag">Administration</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Vue d'ensemble</div>
+      <a href="/admin" class="sidebar-link"><span class="icon">📊</span> Tableau de bord</a>
+      <div class="sidebar-section-label">Catalogue</div>
+      <a href="/admin/products" class="sidebar-link"><span class="icon">🛍️</span> Produits</a>
+      <a href="/admin/categories" class="sidebar-link active"><span class="icon">🗂️</span> Catégories</a>
+      <div class="sidebar-section-label">Commerce</div>
+      <a href="/admin/orders" class="sidebar-link"><span class="icon">📦</span> Commandes</a>
+      <a href="/admin/coupons" class="sidebar-link"><span class="icon">🎟️</span> Coupons</a>
+      <div class="sidebar-section-label">Membres</div>
+      <a href="/admin/users" class="sidebar-link"><span class="icon">👥</span> Utilisateurs</a>
+      <div class="sidebar-section-label">Site</div>
+      <a href="/" target="_blank" class="sidebar-link"><span class="icon">🌐</span> Voir le site</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user-name"></div>
+      <button class="btn btn-dark btn-sm" style="width:100%" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1>Catégories</h1>
+      <button class="btn btn-gold" onclick="openCreate()">+ Nouvelle catégorie</button>
+    </div>
+    <div class="admin-content">
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Image</th><th>Nom</th><th>Slug</th><th>Actions</th></tr></thead>
+            <tbody id="cat-body">
+              <tr><td colspan="4" style="text-align:center;padding:3rem"><div class="spinner" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-cat-title">Nouvelle catégorie</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cat-id">
+      <div class="form-group">
+        <label class="form-label">Nom *</label>
+        <input class="form-control" id="cat-name" placeholder="Ex: Sacs & Maroquinerie">
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL image</label>
+        <input class="form-control" id="cat-image" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-dark" onclick="closeModal('cat-modal')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveCat()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+if (!Auth.isLoggedIn() || !Auth.isAdmin()) window.location.href = '/login';
+document.getElementById('sidebar-user-name').textContent = Auth.get()?.name;
+
+async function loadCats() {
+  const cats = await apiCall('GET', '/categories');
+  document.getElementById('cat-body').innerHTML = cats.length ? cats.map(c => `
+    <tr>
+      <td><img src="${c.image||'https://via.placeholder.com/42'}" onerror="this.src='https://via.placeholder.com/42'"></td>
+      <td style="color:var(--text)">${c.name}</td>
+      <td style="font-size:0.78rem;color:var(--text3)">${c.slug}</td>
+      <td style="display:flex;gap:0.5rem;padding:0.9rem 1rem">
+        <button class="btn btn-dark btn-sm" onclick="openEdit(${JSON.stringify(c).replace(/"/g,'&quot;')})">Modifier</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCat(${c.id})">Supprimer</button>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3)">Aucune catégorie</td></tr>';
+}
+
+function openCreate() {
+  document.getElementById('modal-cat-title').textContent = 'Nouvelle catégorie';
+  document.getElementById('cat-id').value = '';
+  document.getElementById('cat-name').value = '';
+  document.getElementById('cat-image').value = '';
+  openModal('cat-modal');
+}
+
+function openEdit(c) {
+  document.getElementById('modal-cat-title').textContent = 'Modifier la catégorie';
+  document.getElementById('cat-id').value = c.id;
+  document.getElementById('cat-name').value = c.name;
+  document.getElementById('cat-image').value = c.image || '';
+  openModal('cat-modal');
+}
+
+async function saveCat() {
+  const id = document.getElementById('cat-id').value;
+  const name = document.getElementById('cat-name').value.trim();
+  const image = document.getElementById('cat-image').value.trim();
+  if (!name) { Toast.error('Nom requis'); return; }
+  try {
+    if (id) await apiCall('PUT', `/categories/${id}`, { name, image });
+    else await apiCall('POST', '/categories', { name, image });
+    Toast.success(id ? 'Catégorie modifiée' : 'Catégorie créée');
+    closeModal('cat-modal');
+    loadCats();
+  } catch(e) { Toast.error(e.message); }
+}
+
+async function deleteCat(id) {
+  if (!confirm('Supprimer cette catégorie ?')) return;
+  try { await apiCall('DELETE', `/categories/${id}`); Toast.success('Supprimée'); loadCats(); }
+  catch(e) { Toast.error(e.message); }
+}
+
+loadCats();
+</script>
+</body>
+</html>

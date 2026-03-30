@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suivre ma commande — LUXE.MA</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.track-wrap{max-width:640px;margin:0 auto;padding:4rem 1rem;}
+.track-title{font-family:var(--font-display);font-size:2rem;text-align:center;margin-bottom:0.5rem;}
+.track-sub{text-align:center;color:var(--text2);margin-bottom:2.5rem;}
+.track-box{display:flex;gap:0.6rem;margin-bottom:2rem;}
+.track-box input{flex:1;}
+
+.status-timeline{margin:2rem 0;}
+.timeline-step{display:flex;gap:1rem;margin-bottom:1.5rem;position:relative;}
+.timeline-step::before{content:'';position:absolute;left:15px;top:32px;width:2px;height:calc(100% + 8px);background:var(--border);}
+.timeline-step:last-child::before{display:none;}
+.step-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;z-index:1;}
+.step-dot.done{border-color:var(--green);background:rgba(92,184,92,0.1);color:var(--green);}
+.step-dot.current{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
+.step-content{padding-top:0.3rem;}
+.step-label{font-size:0.85rem;font-weight:500;}
+.step-desc{font-size:0.78rem;color:var(--text3);margin-top:0.2rem;}
+
+.order-info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
+.info-row{display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:0.88rem;}
+.info-row:last-child{border:none;}
+.info-label{color:var(--text3);}
+.info-val{color:var(--text);font-weight:400;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">LUXE<span>.</span>MA</a>
+    <div class="nav-links"><a href="/">Accueil</a><a href="/shop">Boutique</a><a href="/track" class="active">Suivre commande</a></div>
+    <div class="nav-actions">
+      <a href="/cart" style="position:relative;display:inline-flex;color:inherit;">
+        <button class="nav-icon-btn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span class="cart-badge" style="display:none">0</span></button>
+      </a>
+      <div id="nav-login" style="display:flex;"><a href="/login" class="btn btn-outline btn-sm">Connexion</a></div>
+      <div id="nav-user" style="display:none;align-items:center;gap:0.8rem;">
+        <a href="/admin" class="btn btn-gold btn-sm nav-admin-link" style="display:none">Admin</a>
+        <span class="nav-user-name" style="font-size:0.8rem;color:var(--text2)"></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="track-wrap">
+  <div class="track-title">📦 Suivre ma commande</div>
+  <p class="track-sub">Entrez votre numéro de commande pour voir l'état de livraison</p>
+
+  <div class="track-box">
+    <input class="form-control" id="order-num" placeholder="Ex: ORD-1234567890-ABCD" style="text-transform:uppercase">
+    <button class="btn btn-gold" onclick="track()">Rechercher</button>
+  </div>
+
+  <div id="track-result"></div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+if (params.get('number')) { document.getElementById('order-num').value = params.get('number'); track(); }
+
+document.getElementById('order-num').addEventListener('keydown', e => { if(e.key==='Enter') track(); });
+
+const STEPS = [
+  { key: 'pending',    label: 'En attente',       desc: 'Commande reçue, en attente de confirmation', icon: '🕐' },
+  { key: 'confirmed',  label: 'Confirmée',         desc: 'Votre commande a été confirmée', icon: '✓' },
+  { key: 'processing', label: 'En préparation',    desc: 'Votre colis est en cours de préparation', icon: '📦' },
+  { key: 'shipped',    label: 'Expédiée',          desc: 'Votre colis est en route', icon: '🚚' },
+  { key: 'delivered',  label: 'Livrée',            desc: 'Commande livrée avec succès', icon: '✅' },
+];
+
+async function track() {
+  const num = document.getElementById('order-num').value.trim().toUpperCase();
+  if (!num) return;
+  const res = document.getElementById('track-result');
+  res.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  try {
+    const order = await apiCall('GET', `/orders/track/${num}`);
+    const currentIdx = STEPS.findIndex(s => s.key === order.status);
+
+    res.innerHTML = `
+      <div class="order-info-card">
+        <div class="info-row"><span class="info-label">Numéro</span><span class="info-val">${order.order_number}</span></div>
+        <div class="info-row"><span class="info-label">Date</span><span class="info-val">${formatDate(order.created_at)}</span></div>
+        <div class="info-row"><span class="info-label">Statut</span><span class="info-val">${statusBadge(order.status)}</span></div>
+        <div class="info-row"><span class="info-label">Total</span><span class="info-val" style="color:var(--gold2);font-weight:500">${parseFloat(order.total).toFixed(2)} MAD</span></div>
+        <div class="info-row"><span class="info-label">Livraison à</span><span class="info-val">${order.shipping_city}</span></div>
+        ${order.delivery_date ? `<div class="info-row"><span class="info-label">Date de livraison</span><span class="info-val">${formatDate(order.delivery_date)}</span></div>` : ''}
+        ${order.delivery_notes ? `<div class="info-row"><span class="info-label">Note livreur</span><span class="info-val">${order.delivery_notes}</span></div>` : ''}
+      </div>
+
+      ${order.status !== 'cancelled' ? `
+      <div class="order-info-card">
+        <div style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:1.2rem;">Suivi de livraison</div>
+        <div class="status-timeline">
+          ${STEPS.map((step, i) => {
+            const done = i < currentIdx;
+            const current = i === currentIdx;
+            return `<div class="timeline-step">
+              <div class="step-dot ${done?'done':current?'current':''}">${done?'✓':step.icon}</div>
+              <div class="step-content">
+                <div class="step-label" style="color:${done||current?'var(--text)':'var(--text3)'}">${step.label}</div>
+                <div class="step-desc">${step.desc}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : `<div style="background:rgba(224,85,85,0.1);border:1px solid rgba(224,85,85,0.2);border-radius:var(--radius);padding:1rem 1.2rem;color:var(--red)">❌ Cette commande a été annulée.</div>`}
+
+      <div class="order-info-card">
+        <div style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:1rem;">Articles commandés</div>
+        ${order.items.map(item => `
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:0.88rem;">
+            <span>${item.product_name} <span style="color:var(--text3)">× ${item.quantity}</span></span>
+            <span style="color:var(--gold2)">${parseFloat(item.subtotal).toFixed(2)} MAD</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch(e) {
+    res.innerHTML = `<div style="background:rgba(224,85,85,0.1);border:1px solid rgba(224,85,85,0.2);border-radius:var(--radius);padding:1.5rem;text-align:center;color:var(--red)">
+      Commande non trouvée. Vérifiez le numéro saisi.
+    </div>`;
+  }
+}
+</script>
+</body>
+</html>
