@@ -2,25 +2,24 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LUXE.MA — Accessoires de Mode</title>
+<title>LUXE.MA — Produits de qualité au meilleur prix</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
-/* HERO */
+/* ── HERO ── */
 .hero {
-  min-height: 92vh; display: flex; align-items: center;
+  min-height: 94vh; display: flex; align-items: center;
   background: linear-gradient(135deg, #0d0d0d 0%, #141414 50%, #1a1205 100%);
   position: relative; overflow: hidden;
 }
 .hero::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(201,168,76,0.07) 0%, transparent 70%);
 }
 .hero-bg-text {
   position: absolute; right: -2rem; top: 50%; transform: translateY(-50%);
   font-family: var(--font-display); font-size: clamp(8rem, 20vw, 18rem);
   font-weight: 300; color: rgba(201,168,76,0.04);
   line-height: 1; pointer-events: none; user-select: none;
-  letter-spacing: -0.02em;
 }
 .hero-content { position: relative; z-index: 1; max-width: 680px; }
 .hero-tag {
@@ -29,25 +28,40 @@
   color: var(--gold); border: 1px solid rgba(201,168,76,0.3);
   padding: 0.4rem 1rem; border-radius: 2rem;
 }
-.hero h1 {
-  line-height: 1.1; margin-bottom: 1.5rem;
-  font-weight: 300;
-}
+.hero h1 { line-height: 1.1; margin-bottom: 1rem; font-weight: 300; }
 .hero h1 em { font-style: italic; color: var(--gold); }
-.hero p {
-  color: var(--text2); font-size: 1rem; line-height: 1.8;
-  max-width: 480px; margin-bottom: 2.5rem;
+.hero-sub {
+  color: var(--text2); font-size: 1.05rem; line-height: 1.7;
+  max-width: 480px; margin-bottom: 0.8rem;
 }
-.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+.hero-delivery {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-size: 0.9rem; color: var(--text2); margin-bottom: 2rem;
+}
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.hero-promo {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 2rem; padding: 0.5rem 1.2rem;
+  font-size: 0.82rem; color: var(--gold); font-weight: 500;
+  animation: pulse-gold 3s ease infinite;
+}
+@keyframes pulse-gold {
+  0%,100%{ box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+  50%{ box-shadow: 0 0 0 6px rgba(201,168,76,0.08); }
+}
 .hero-scroll {
   position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
   color: var(--text3); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
   animation: bounce 2s ease infinite;
 }
-@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+@keyframes bounce {
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  50%{transform:translateX(-50%) translateY(8px)}
+}
 
-/* CATEGORIES STRIP */
+/* ── CATEGORIES ── */
 .cats-strip { padding: 3rem 0; background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .cats-grid { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
 .cats-grid::-webkit-scrollbar { height: 3px; }
@@ -55,21 +69,96 @@
   flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem;
   cursor: pointer; padding: 1.2rem 1.5rem; border-radius: var(--radius);
   border: 1px solid var(--border); background: var(--surface);
-  transition: all var(--transition); text-decoration: none; min-width: 130px;
+  transition: all var(--transition); text-decoration: none; min-width: 120px;
 }
-.cat-chip:hover, .cat-chip.active { border-color: var(--gold); background: var(--gold-dim); }
+.cat-chip:hover { border-color: var(--gold); background: var(--gold-dim); }
 .cat-chip img { width: 50px; height: 50px; object-fit: cover; border-radius: 50%; }
-.cat-chip span { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); }
+.cat-chip span { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); }
 .cat-chip:hover span { color: var(--gold); }
 
-/* FEATURES */
-.features-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); margin-top: 0; }
+/* ── PRODUCT CARD EXTRAS ── */
+.product-rating {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.78rem; color: var(--gold2); margin-bottom: 0.3rem;
+}
+.product-rating .stars { letter-spacing: -1px; }
+.product-rating .count { color: var(--text3); font-size: 0.72rem; }
+.product-customers {
+  font-size: 0.72rem; color: var(--text3); margin-top: 0.3rem;
+}
+.product-customers span { color: var(--gold); font-weight: 500; }
+.product-viewers {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.7rem; color: var(--text3);
+  background: rgba(92,184,92,0.08); border: 1px solid rgba(92,184,92,0.2);
+  border-radius: 2rem; padding: 0.2rem 0.6rem; margin-top: 0.4rem;
+}
+.product-viewers::before { content: ''; width:6px; height:6px; background:#5cb85c; border-radius:50%; animation: blink 1.5s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── TESTIMONIALS ── */
+.testimonials { padding: 5rem 0; background: var(--bg2); border-top: 1px solid var(--border); }
+.testimonials-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem;
+}
+.testimonial-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.8rem;
+  transition: border-color var(--transition);
+}
+.testimonial-card:hover { border-color: rgba(201,168,76,0.3); }
+.testimonial-stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 1rem; letter-spacing: 2px; }
+.testimonial-text {
+  color: var(--text2); font-size: 0.9rem; line-height: 1.7;
+  font-style: italic; margin-bottom: 1.2rem;
+}
+.testimonial-author {
+  display: flex; align-items: center; gap: 0.8rem;
+}
+.testimonial-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 600; color: var(--gold);
+  flex-shrink: 0;
+}
+.testimonial-name { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+.testimonial-location { font-size: 0.72rem; color: var(--text3); }
+.testimonial-verified {
+  margin-left: auto; font-size: 0.65rem; color: var(--green);
+  display: flex; align-items: center; gap: 0.3rem;
+}
+
+/* ── LIVE ACTIVITY (popup) ── */
+.live-popup {
+  position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 500;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 0.9rem 1.2rem;
+  box-shadow: var(--shadow); max-width: 280px;
+  display: flex; align-items: center; gap: 0.8rem;
+  animation: slideInLeft 0.4s ease;
+  font-size: 0.82rem; color: var(--text2);
+}
+.live-popup-dot { width:8px; height:8px; background:#5cb85c; border-radius:50%; flex-shrink:0; animation: blink 1.5s ease infinite; }
+.live-popup strong { color: var(--text); }
+@keyframes slideInLeft { from{opacity:0;transform:translateX(-30px)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideOutLeft { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-30px)} }
+
+/* ── FEATURES ── */
+.features-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); }
 .feature-item { background: var(--bg2); padding: 2.5rem 2rem; text-align: center; }
 .feature-icon { font-size: 1.8rem; margin-bottom: 1rem; }
 .feature-title { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); margin-bottom: 0.4rem; }
 .feature-desc { font-size: 0.8rem; color: var(--text3); }
-@media(max-width:900px){ .features-row{grid-template-columns:1fr 1fr;} }
-@media(max-width:500px){ .features-row{grid-template-columns:1fr;} }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){ .features-row{grid-template-columns:1fr 1fr;} .testimonials-grid{grid-template-columns:1fr 1fr;} }
+@media(max-width:600px){
+  .features-row{grid-template-columns:1fr;}
+  .testimonials-grid{grid-template-columns:1fr;}
+  .live-popup{max-width:240px; font-size:0.75rem;}
+  .hero-promo{ font-size:0.75rem; }
+}
 </style>
 </head>
 <body>
@@ -101,22 +190,41 @@
           <span class="nav-user-name" style="font-size:0.8rem;margin-left:0.3rem"></span>
         </button>
       </div>
+      <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- Mobile menu -->
+<div class="nav-mobile-menu" id="nav-mobile-menu">
+  <div class="mobile-menu-logo">LUXE<span>.</span>MA</div>
+  <a href="/" onclick="closeMobileMenu()">Accueil</a>
+  <a href="/shop" onclick="closeMobileMenu()">Boutique</a>
+  <a href="/track" onclick="closeMobileMenu()">Suivre commande</a>
+  <a href="/cart" onclick="closeMobileMenu()">Panier</a>
+  <a href="/profile" onclick="closeMobileMenu()" id="mobile-profile-link" style="display:none">Mon profil</a>
+  <a href="/my-orders" onclick="closeMobileMenu()" id="mobile-orders-link" style="display:none">Mes commandes</a>
+  <a href="/admin" onclick="closeMobileMenu()" id="mobile-admin-link" style="display:none;color:var(--gold)">Dashboard Admin</a>
+  <a href="/login" onclick="closeMobileMenu()" id="mobile-login-link">Connexion</a>
+  <button onclick="logout()" id="mobile-logout-btn" style="display:none;color:var(--red)">Déconnexion</button>
+</div>
+
+<!-- ══ HERO ══ -->
 <section class="hero">
   <div class="hero-bg-text">LUXE</div>
   <div class="container">
     <div class="hero-content">
       <div class="hero-tag">✦ Nouvelle collection 2025</div>
-      <h1>L'élégance à<br>portée de <em>main</em></h1>
-      <p>Découvrez notre sélection exclusive d'accessoires de mode. Sacs, bijoux, lunettes et bien plus — un luxe accessible, livré chez vous.</p>
+      <h1>Découvrez des produits<br>de qualité au <em>meilleur prix</em></h1>
+      <p class="hero-sub">Des accessoires soigneusement sélectionnés pour vous.</p>
+      <p class="hero-delivery">🚚 Livraison rapide partout au Maroc</p>
       <div class="hero-btns">
-        <a href="/shop" class="btn btn-gold btn-lg">Explorer la boutique</a>
+        <a href="/shop" class="btn btn-gold btn-lg">👉 Acheter maintenant</a>
         <a href="/track" class="btn btn-outline btn-lg">Suivre ma commande</a>
       </div>
+      <div class="hero-promo">🎁 -10% sur votre première commande — Code : <strong style="margin-left:0.3rem">BIENVENUE10</strong></div>
     </div>
   </div>
   <div class="hero-scroll">
@@ -125,7 +233,7 @@
   </div>
 </section>
 
-<!-- CATEGORIES -->
+<!-- ══ CATEGORIES ══ -->
 <section class="cats-strip">
   <div class="container">
     <div class="cats-grid" id="cats-grid">
@@ -134,14 +242,14 @@
   </div>
 </section>
 
-<!-- FEATURED PRODUCTS -->
+<!-- ══ PRODUITS LES PLUS VENDUS ══ -->
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-tag">✦ Sélection</div>
-      <h2 class="section-title">Coups de cœur</h2>
+      <div class="section-tag">🔥 Tendance</div>
+      <h2 class="section-title">Les produits les plus populaires</h2>
       <div class="divider"></div>
-      <p class="section-sub">Nos pièces les plus appréciées, choisies pour leur qualité et leur style</p>
+      <p class="section-sub">Choisis par des centaines de clients satisfaits</p>
     </div>
     <div class="products-grid" id="featured-grid">
       <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
@@ -152,7 +260,7 @@
   </div>
 </section>
 
-<!-- FEATURES -->
+<!-- ══ FEATURES ══ -->
 <div class="features-row">
   <div class="feature-item">
     <div class="feature-icon">🚚</div>
@@ -176,7 +284,93 @@
   </div>
 </div>
 
-<!-- FOOTER -->
+<!-- ══ AVIS CLIENTS ══ -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">⭐ Avis vérifiés</div>
+      <h2 class="section-title">Ce que disent nos clients</h2>
+      <div class="divider"></div>
+      <p class="section-sub">Plus de 500 clients satisfaits à travers tout le Maroc</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Excellent produit, livraison rapide ! J'ai reçu ma commande en moins de 24h. Je suis vraiment impressionnée par la qualité."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">S</div>
+          <div>
+            <div class="testimonial-name">Sara M.</div>
+            <div class="testimonial-location">Casablanca</div>
+          </div>
+          <div class="testimonial-verified">✓ Vérifié</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Très satisfait, je recommande 👍 Le produit correspond exactement aux photos. Le service client est au top, merci !"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">A</div>
+          <div>
+            <div class="testimonial-name">Ahmed K.</div>
+            <div class="testimonial-location">Rabat</div>
+          </div>
+          <div class="testimonial-verified">✓ Vérifié</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★☆</div>
+        <p class="testimonial-text">"Super boutique ! Les prix sont imbattables et la qualité est au rendez-vous. Je commande régulièrement ici."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">F</div>
+          <div>
+            <div class="testimonial-name">Fatima Z.</div>
+            <div class="testimonial-location">Marrakech</div>
+          </div>
+          <div class="testimonial-verified">✓ Vérifié</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Paiement à la livraison c'est rassurant. Produit de bonne qualité, packaging soigné. Je recommande à tous !"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">Y</div>
+          <div>
+            <div class="testimonial-name">Youssef B.</div>
+            <div class="testimonial-location">Fès</div>
+          </div>
+          <div class="testimonial-verified">✓ Vérifié</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Deuxième commande et toujours aussi satisfaite ! Le rapport qualité-prix est excellent. Livraison en 2 jours."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">N</div>
+          <div>
+            <div class="testimonial-name">Nadia R.</div>
+            <div class="testimonial-location">Tanger</div>
+          </div>
+          <div class="testimonial-verified">✓ Vérifié</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Boutique sérieuse, produits conformes aux descriptions. Service rapide et professionnel. Je reviendrai !"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">O</div>
+          <div>
+            <div class="testimonial-name">Omar S.</div>
+            <div class="testimonial-location">Agadir</div>
+          </div>
+          <div class="testimonial-verified">✓ Vérifié</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
@@ -218,47 +412,137 @@
   </div>
 </footer>
 
+<!-- Live activity popup -->
+<div class="live-popup" id="live-popup" style="display:none">
+  <div class="live-popup-dot"></div>
+  <span id="live-popup-text"></span>
+</div>
+
 <div id="toast-container"></div>
 
 <script src="/js/main.js"></script>
 <script>
+// ── Ratings simulés par produit (basé sur l'id) ──
+function getRating(id) {
+  const ratings = [4.8, 4.9, 4.7, 5.0, 4.6, 4.8, 4.9, 4.7];
+  return ratings[id % ratings.length];
+}
+function getCustomers(id) {
+  const counts = [120, 87, 203, 56, 145, 92, 178, 64];
+  return counts[id % counts.length];
+}
+function getViewers(id) {
+  return Math.floor(Math.random() * 8) + 2;
+}
+function renderStars(rating) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5 ? 1 : 0;
+  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
+}
+
 async function loadHome() {
-  // Load categories
+  // Categories
   try {
     const cats = await apiCall('GET', '/categories');
     const grid = document.getElementById('cats-grid');
-    grid.innerHTML = cats.map(c => `
-      <a href="/shop?category=${c.slug}" class="cat-chip">
-        <img src="${c.image || 'https://via.placeholder.com/50'}" alt="${c.name}" onerror="this.src='https://via.placeholder.com/50'">
-        <span>${c.name}</span>
-      </a>
-    `).join('');
+    if (cats.length) {
+      grid.innerHTML = cats.map(c => `
+        <a href="/shop?category=${c.slug}" class="cat-chip">
+          <img src="${c.image || 'https://via.placeholder.com/50'}" alt="${c.name}" onerror="this.src='https://via.placeholder.com/50'">
+          <span>${c.name}</span>
+        </a>
+      `).join('');
+    } else {
+      grid.innerHTML = '';
+    }
   } catch {}
 
-  // Load featured products
+  // Featured products
   try {
     const data = await apiCall('GET', '/products?featured=true&limit=8');
     const grid = document.getElementById('featured-grid');
-    if (!data.products.length) { grid.innerHTML = '<p style="color:var(--text3);grid-column:1/-1;text-align:center;padding:3rem">Aucun produit disponible</p>'; return; }
-    grid.innerHTML = data.products.map(p => `
-      <div class="product-card" onclick="window.location='/product/${p.slug}'">
-        <img class="product-card-img" src="${p.image || 'https://via.placeholder.com/400'}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400'">
-        <div class="product-card-body">
-          <div class="product-card-cat">${p.category_name || ''}</div>
-          <div class="product-card-name">${p.name}</div>
-          <div class="product-card-price">${parseFloat(p.price).toFixed(2)} MAD</div>
+    if (!data.products || !data.products.length) {
+      grid.innerHTML = '<p style="color:var(--text3);grid-column:1/-1;text-align:center;padding:3rem">Aucun produit disponible</p>';
+      return;
+    }
+    grid.innerHTML = data.products.map(p => {
+      const rating = getRating(p.id);
+      const customers = getCustomers(p.id);
+      const viewers = getViewers(p.id);
+      return `
+        <div class="product-card" onclick="window.location='/product/${p.slug}'">
+          <img class="product-card-img" src="${p.image || 'https://via.placeholder.com/400'}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400'">
+          <div class="product-card-body">
+            <div class="product-card-cat">${p.category_name || ''}</div>
+            <div class="product-card-name">${p.name}</div>
+            <div class="product-rating">
+              <span class="stars">${renderStars(rating)}</span>
+              <span>${rating}/5</span>
+              <span class="count">(${customers})</span>
+            </div>
+            <div class="product-card-price">${parseFloat(p.price).toFixed(2)} MAD</div>
+            <div class="product-customers">👥 <span>+${customers}</span> clients satisfaits</div>
+            <div class="product-viewers">👀 ${viewers} personnes consultent actuellement</div>
+          </div>
+          <div class="product-card-actions">
+            <button class="btn btn-gold" style="width:100%" onclick="event.stopPropagation();addToCart(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+              Ajouter au panier
+            </button>
+          </div>
         </div>
-        <div class="product-card-actions">
-          <button class="btn btn-gold" style="width:100%" onclick="event.stopPropagation();addToCart(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-            Ajouter au panier
-          </button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch(e) { console.error(e); }
 }
 
 function addToCart(p) { Cart.add(p); }
+
+// ── Live activity popup ──
+const liveActivities = [
+  '👀 <strong>5 personnes</strong> consultent ce produit',
+  '🛒 <strong>Karim</strong> vient d\'ajouter au panier',
+  '📦 <strong>Sara</strong> a passé commande il y a 3 min',
+  '👀 <strong>3 personnes</strong> consultent en ce moment',
+  '🔥 <strong>12 commandes</strong> aujourd\'hui',
+  '⏰ <strong>Stock limité</strong> — commandez vite !',
+  '🛒 <strong>Fatima</strong> vient d\'acheter',
+  '📍 <strong>Livraison</strong> confirmée à Casablanca',
+];
+let popupIndex = 0;
+function showNextPopup() {
+  const popup = document.getElementById('live-popup');
+  const text = document.getElementById('live-popup-text');
+  text.innerHTML = liveActivities[popupIndex % liveActivities.length];
+  popup.style.display = 'flex';
+  popup.style.animation = 'slideInLeft 0.4s ease';
+  popupIndex++;
+  setTimeout(() => {
+    popup.style.animation = 'slideOutLeft 0.4s ease forwards';
+    setTimeout(() => { popup.style.display = 'none'; }, 400);
+  }, 4000);
+}
+setTimeout(() => {
+  showNextPopup();
+  setInterval(showNextPopup, 8000);
+}, 3000);
+
+// ── Mobile menu ──
+function toggleMobileMenu() {
+  const menu = document.getElementById('nav-mobile-menu');
+  const btn = document.getElementById('nav-hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+  document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+}
+function closeMobileMenu() {
+  const menu = document.getElementById('nav-mobile-menu');
+  const btn = document.getElementById('nav-hamburger');
+  if (!menu) return;
+  menu.classList.remove('open');
+  btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 loadHome();
 </script>
 </body>
