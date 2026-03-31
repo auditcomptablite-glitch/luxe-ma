@@ -147,7 +147,14 @@ async function loadProducts() {
         <td style="font-size:0.82rem;color:var(--text3)">${p.category_name||'—'}</td>
         <td style="color:var(--gold2)">${parseFloat(p.price).toFixed(2)} MAD</td>
         <td style="color:${p.stock<5?'var(--red)':p.stock<20?'var(--gold)':'var(--green)'}">${p.stock}</td>
-        <td>${p.is_featured?'⭐':'—'}</td>
+        <td>
+          <button
+            class="btn btn-sm ${p.is_featured ? 'btn-gold' : 'btn-dark'}"
+            style="font-size:0.8rem;padding:0.25rem 0.6rem"
+            onclick="togglePopular(${p.id}, this)"
+            title="${p.is_featured ? 'Retirer des populaires' : 'Marquer comme populaire'}"
+          >${p.is_featured ? '⭐ Populaire' : '☆ Non populaire'}</button>
+        </td>
         <td><span class="badge ${p.is_active?'badge-delivered':'badge-cancelled'}">${p.is_active?'Actif':'Inactif'}</span></td>
         <td style="display:flex;gap:0.5rem;padding:0.9rem 1rem">
           <button class="btn btn-dark btn-sm" onclick="openEdit(${JSON.stringify(p).replace(/"/g,'&quot;')})">Modifier</button>
@@ -229,6 +236,18 @@ async function deleteProduct(id) {
     await apiCall('DELETE', `/products/${id}`);
     Toast.success('Produit désactivé');
     loadProducts();
+  } catch(e) { Toast.error(e.message); }
+}
+
+async function togglePopular(id, btn) {
+  try {
+    const res = await apiCall('PATCH', `/products/${id}/popular`);
+    const featured = res.is_featured;
+    btn.className = `btn btn-sm ${featured ? 'btn-gold' : 'btn-dark'}`;
+    btn.style = 'font-size:0.8rem;padding:0.25rem 0.6rem';
+    btn.textContent = featured ? '⭐ Populaire' : '☆ Non populaire';
+    btn.title = featured ? 'Retirer des populaires' : 'Marquer comme populaire';
+    Toast.success(featured ? 'Ajouté aux produits populaires' : 'Retiré des produits populaires');
   } catch(e) { Toast.error(e.message); }
 }
 

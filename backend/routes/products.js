@@ -68,6 +68,19 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
+// Toggle popular (is_featured) — admin
+router.patch('/:id/popular', auth, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT is_featured FROM products WHERE id=?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Produit non trouvé' });
+    const newVal = rows[0].is_featured ? 0 : 1;
+    await db.query('UPDATE products SET is_featured=? WHERE id=?', [newVal, req.params.id]);
+    res.json({ success: true, is_featured: newVal });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Delete product (admin)
 router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
