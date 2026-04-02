@@ -20,6 +20,28 @@
 .stock-ok { color:var(--green); }
 .stock-low { color:var(--gold); }
 .stock-out { color:var(--red); }
+
+/* Color selector */
+.color-section { margin-bottom:1.8rem; }
+.color-section-label { font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text2); margin-bottom:0.8rem; display:flex; align-items:center; gap:0.6rem; }
+.color-section-label span { color:var(--text); font-weight:500; font-size:0.82rem; letter-spacing:0; text-transform:none; }
+.color-swatches { display:flex; flex-wrap:wrap; gap:0.55rem; }
+.color-swatch {
+  position:relative; width:34px; height:34px; border-radius:50%;
+  cursor:pointer; border:2px solid transparent;
+  transition:all 0.2s ease; flex-shrink:0;
+}
+.color-swatch:hover { transform:scale(1.12); }
+.color-swatch.selected { border-color:var(--gold); box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--gold); }
+.color-swatch.out { opacity:0.3; cursor:not-allowed; }
+.color-swatch .swatch-tooltip {
+  position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
+  background:var(--surface); border:1px solid var(--border2); color:var(--text);
+  font-size:0.68rem; white-space:nowrap; padding:0.2rem 0.5rem; border-radius:3px;
+  pointer-events:none; opacity:0; transition:opacity 0.15s; z-index:10;
+}
+.color-swatch:hover .swatch-tooltip { opacity:1; }
+
 @media(max-width:800px){.product-detail{grid-template-columns:1fr;gap:2rem;}}
 </style>
 </head>
@@ -52,6 +74,7 @@
 <script>
 let product = null;
 let qty = 1;
+let selectedColor = null; // { id, name, hex, stock }
 
 async function loadProduct() {
   const slug = window.location.pathname.split('/').pop();
@@ -68,9 +91,47 @@ async function loadProduct() {
   }
 }
 
+/* Effective stock = color stock if color selected, else global product stock */
+function effectiveStock() {
+  if (selectedColor) return selectedColor.stock;
+  // If product has colors, sum of all colors stocks
+  if (product.colors && product.colors.length) {
+    return product.colors.reduce((s, c) => s + c.stock, 0);
+  }
+  return product.stock;
+}
+
+function stockDisplay(stock) {
+  if (stock <= 0)  return { cls: 'stock-out', txt: '✕ Rupture de stock' };
+  if (stock <= 5)  return { cls: 'stock-low', txt: `⚠ Stock limité (${stock} restants)` };
+  return { cls: 'stock-ok', txt: `✓ En stock (${stock} disponibles)` };
+}
+
+function renderColorSection() {
+  if (!product.colors || !product.colors.length) return '';
+  const selectedLabel = selectedColor
+    ? `<span>${selectedColor.name}</span>`
+    : '<span style="color:var(--text3)">Non sélectionnée</span>';
+  return `
+    <div class="color-section">
+      <div class="color-section-label">Couleur — ${selectedLabel}</div>
+      <div class="color-swatches">
+        ${product.colors.map(c => `
+          <div class="color-swatch ${c.stock <= 0 ? 'out' : ''} ${selectedColor?.id === c.id ? 'selected' : ''}"
+               style="background:${c.hex}"
+               onclick="selectColor(${c.id})"
+               title="${c.name}">
+            <div class="swatch-tooltip">${c.name}${c.stock > 0 ? ` — ${c.stock} dispo.` : ' — Épuisé'}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
 function render() {
-  const stockClass = product.stock > 10 ? 'stock-ok' : product.stock > 0 ? 'stock-low' : 'stock-out';
-  const stockText = product.stock > 10 ? `✓ En stock (${product.stock} disponibles)` : product.stock > 0 ? `⚠ Stock limité (${product.stock} restants)` : '✕ Rupture de stock';
+  const stock = effectiveStock();
+  const { cls, txt } = stockDisplay(stock);
+  qty = Math.min(qty, Math.max(1, stock));
 
   document.title = `${product.name} — LUXE.MA`;
   document.getElementById('product-detail').innerHTML = `
@@ -86,17 +147,20 @@ function render() {
         <h1 class="product-title">${product.name}</h1>
         <div class="product-price">${parseFloat(product.price).toFixed(2)} MAD</div>
         <p class="product-desc">${product.description||''}</p>
-        <div class="stock-info ${stockClass}">${stockText}</div>
 
-        ${product.stock > 0 ? `
+        ${renderColorSection()}
+
+        <div class="stock-info ${cls}" id="stock-info-line">${txt}</div>
+
+        ${stock > 0 ? `
         <div class="qty-control">
           <button class="qty-btn" onclick="changeQty(-1)">−</button>
-          <span class="qty-val" id="qty-display">1</span>
+          <span class="qty-val" id="qty-display">${qty}</span>
           <button class="qty-btn" onclick="changeQty(1)">+</button>
           <span style="font-size:0.82rem;color:var(--text3)">quantité</span>
         </div>
         <div style="display:flex;gap:1rem;flex-wrap:wrap">
-          <button class="btn btn-gold btn-lg" onclick="addProduct()" style="flex:1">
+          <button class="btn btn-gold btn-lg" onclick="addProduct()" style="flex:1" id="add-btn">
             🛒 Ajouter au panier
           </button>
           <a href="/checkout" class="btn btn-outline btn-lg" onclick="addProduct()" style="flex:1">
@@ -114,13 +178,28 @@ function render() {
   `;
 }
 
+function selectColor(colorId) {
+  const color = product.colors.find(c => c.id === colorId);
+  if (!color || color.stock <= 0) return; // épuisé = non sélectionnable
+  // Toggle off if already selected
+  selectedColor = (selectedColor?.id === colorId) ? null : color;
+  qty = 1;
+  render();
+}
+
 function changeQty(delta) {
-  qty = Math.max(1, Math.min(product.stock, qty + delta));
+  const max = effectiveStock();
+  qty = Math.max(1, Math.min(max, qty + delta));
   document.getElementById('qty-display').textContent = qty;
 }
 
 function addProduct() {
-  Cart.add(product, qty);
+  const p = { ...product };
+  if (selectedColor) {
+    p.selectedColor = selectedColor.name;
+    p.selectedColorHex = selectedColor.hex;
+  }
+  Cart.add(p, qty);
 }
 
 loadProduct();

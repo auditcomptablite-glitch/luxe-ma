@@ -94,8 +94,20 @@ CREATE TABLE IF NOT EXISTS order_items (
   product_price DECIMAL(10,2) NOT NULL,
   quantity INT NOT NULL,
   subtotal DECIMAL(10,2) NOT NULL,
+  selected_color VARCHAR(100) DEFAULT NULL,
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+);
+
+-- Product Colors
+CREATE TABLE IF NOT EXISTS product_colors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  hex VARCHAR(7) NOT NULL,
+  stock INT DEFAULT 0,
+  sort_order INT DEFAULT 0,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 -- =============================================

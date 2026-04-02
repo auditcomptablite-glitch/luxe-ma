@@ -19,6 +19,19 @@ router.get('/', async (req, res) => {
     params.push(parseInt(limit), offset);
 
     const [rows] = await db.query(query, params);
+
+    // Attach colors to each product
+    if (rows.length) {
+      const ids = rows.map(r => r.id);
+      const [colors] = await db.query(
+        `SELECT * FROM product_colors WHERE product_id IN (${ids.map(()=>'?').join(',')}) ORDER BY sort_order, id`,
+        ids
+      );
+      const colorMap = {};
+      colors.forEach(c => { if (!colorMap[c.product_id]) colorMap[c.product_id] = []; colorMap[c.product_id].push(c); });
+      rows.forEach(r => { r.colors = colorMap[r.id] || []; });
+    }
+
     res.json({ products: rows, total: countRows[0].total, page: parseInt(page), pages: Math.ceil(countRows[0].total / limit) });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -33,7 +46,13 @@ router.get('/:slug', async (req, res) => {
       [req.params.slug]
     );
     if (!rows.length) return res.status(404).json({ error: 'Produit non trouvé' });
-    res.json(rows[0]);
+    const product = rows[0];
+    const [colors] = await db.query(
+      'SELECT * FROM product_colors WHERE product_id = ? ORDER BY sort_order, id',
+      [product.id]
+    );
+    product.colors = colors;
+    res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -89,6 +108,43 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Colors ──────────────────────────────────────────
+
+// Get colors for a product (admin)
+router.get('/:id/colors', auth, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM product_colors WHERE product_id = ? ORDER BY sort_order, id',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Set (replace all) colors for a product (admin)
+router.put('/:id/colors', auth, adminOnly, async (req, res) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const { colors } = req.body; // [{ name, hex, stock, sort_order }]
+    await conn.query('DELETE FROM product_colors WHERE product_id = ?', [req.params.id]);
+    if (colors && colors.length) {
+      for (let i = 0; i < colors.length; i++) {
+        const c = colors[i];
+        await conn.query(
+          'INSERT INTO product_colors (product_id, name, hex, stock, sort_order) VALUES (?,?,?,?,?)',
+          [req.params.id, c.name, c.hex, c.stock || 0, i]
+        );
+      }
+    }
+    await conn.commit();
+    res.json({ success: true });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ error: err.message });
+  } finally { conn.release(); }
 });
 
 module.exports = router;
