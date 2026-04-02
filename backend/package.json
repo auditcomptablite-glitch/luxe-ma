@@ -1,0 +1,11 @@
+{
+  "name": "luxe-ma-shop",
+  "version": "1.0.0",
+  "description": "Boutique accessoires de mode - LUXE.MA",
+  "scripts": {
+    "start": "cd backend && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
