@@ -1,8 +1,9 @@
 [build]
 builder = "NIXPACKS"
+buildCommand = "cd backend && npm install && npm install -g pm2"
 
 [deploy]
-startCommand = "node backend/server.js"
+startCommand = "pm2-runtime start backend/server.js -i max"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
