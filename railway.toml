@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cd backend && npm install && npm install -g pm2"
+buildCommand = "npm install --prefix backend && npm install -g pm2"
 
 [deploy]
 startCommand = "pm2-runtime start backend/server.js -i max"
