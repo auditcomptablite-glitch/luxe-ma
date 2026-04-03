@@ -405,6 +405,9 @@ select.form-control { cursor: pointer; }
   .nav-hamburger { display: flex; }
   .form-row { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
+  /* Cacher boutons Mes commandes et Admin dans la navbar sur tablette aussi */
+  #nav-my-orders-btn { display: none !important; }
+  .nav-admin-link { display: none !important; }
 }
 
 /* ── RESPONSIVE MOBILE ── */
@@ -423,8 +426,24 @@ select.form-control { cursor: pointer; }
 
   /* Nav */
   .nav { padding: 0 1rem; }
-  .nav-inner { height: 60px; }
+  .nav-inner { height: 60px; gap: 0.5rem; }
   .nav-mobile-menu { top: 60px; }
+
+  /* Sur mobile, cacher les boutons Mes commandes et Admin dans la navbar */
+  #nav-my-orders-btn { display: none !important; }
+  .nav-admin-link { display: none !important; }
+
+  /* Réduire le gap entre actions et limiter débordement */
+  .nav-actions { gap: 0.4rem; }
+
+  /* Cacher le nom d'utilisateur sur mobile */
+  .nav-user-name { display: none; }
+
+  /* Icône panier compacte */
+  .nav-icon-btn { padding: 0.3rem; }
+
+  /* Logo plus petit sur mobile */
+  .nav-logo { font-size: 1.3rem; }
 
   /* Boutons pleine largeur sur mobile */
   .btn-lg { padding: 0.85rem 1.5rem; }
