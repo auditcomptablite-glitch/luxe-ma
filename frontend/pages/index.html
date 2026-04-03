@@ -412,6 +412,56 @@
   </div>
 </footer>
 
+<!-- ══ WHATSAPP BUTTON ══ -->
+<a
+  href="https://wa.me/212777117095?text=Bonjour%2C%20je%20voudrais%20avoir%20plus%20d%27informations%20sur%20vos%20produits."
+  target="_blank"
+  rel="noopener noreferrer"
+  class="whatsapp-btn"
+  title="Contactez-nous sur WhatsApp"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28" fill="white">
+    <path d="M16 0C7.163 0 0 7.163 0 16c0 2.822.737 5.469 2.027 7.774L0 32l8.426-2.009A15.93 15.93 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.79-1.862l-.487-.291-5.003 1.194 1.215-4.876-.318-.5A13.267 13.267 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.878c-.398-.199-2.355-1.163-2.72-1.295-.365-.133-.631-.199-.897.199-.266.398-1.031 1.295-1.264 1.561-.232.266-.465.299-.863.1-.398-.199-1.681-.62-3.203-1.977-1.184-1.057-1.983-2.362-2.215-2.76-.232-.398-.025-.613.174-.811.18-.178.398-.465.597-.698.199-.232.266-.398.398-.664.133-.266.066-.498-.033-.697-.1-.199-.897-2.163-1.23-2.96-.323-.776-.651-.671-.897-.683l-.764-.013c-.266 0-.698.1-1.064.498-.365.398-1.396 1.363-1.396 3.326s1.43 3.858 1.629 4.124c.199.266 2.814 4.297 6.818 6.027.953.411 1.697.657 2.277.841.957.305 1.829.262 2.517.159.768-.114 2.355-.963 2.688-1.894.332-.932.332-1.73.232-1.894-.099-.166-.365-.266-.763-.465z"/>
+  </svg>
+  <span>WhatsApp</span>
+</a>
+
+<style>
+.whatsapp-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #25D366;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1.2rem 0.75rem 1rem;
+  border-radius: 3rem;
+  box-shadow: 0 4px 20px rgba(37,211,102,0.35);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: wa-pulse 3s ease infinite;
+}
+.whatsapp-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 28px rgba(37,211,102,0.5);
+}
+@keyframes wa-pulse {
+  0%,100% { box-shadow: 0 4px 20px rgba(37,211,102,0.35); }
+  50%      { box-shadow: 0 4px 28px rgba(37,211,102,0.55); }
+}
+@media(max-width:600px) {
+  .whatsapp-btn span { display: none; }
+  .whatsapp-btn { padding: 0.85rem; border-radius: 50%; bottom: 1.5rem; right: 1.2rem; }
+}
+</style>
+
 <!-- Live activity popup -->
 <div class="live-popup" id="live-popup" style="display:none">
   <div class="live-popup-dot"></div>
